@@ -1,0 +1,32 @@
+#[SI] units
+
+# Parameters chosen to ensure GW emission dominates mass loss (Inspiral regime)
+# Compact orbit for reasonable coalescence time
+#dr 1e-17 GOOD!
+
+decay_rate = 1e-17
+M1 = 1.4
+M2 = 1.4
+a = 10e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)
+e = 0.1                     # Moderate eccentricity for stability
+
+output_points = 10000000
+use_cotime = true
+cotime_a_min = 3e4          # ISCO radius ~30 km for NS merger
+cotime_max_time = 1e20      # ~300 years max integration
+observer_distance_mpc = 10  # 10 Megaparsecs (typical LIGO distance)
+
+method = "Radau"
+decay_type = "exponential"
+initial_points_exponent = 0
+exponent_offset = 12
+merger_focus = true
+merger_seconds = 5.0
+
+width = 960
+height = 540
+fps = 60
+tail_length = 200
+star_scale = 5.0
+memory_gb = 10.0
+stride = 1000

@@ -1,0 +1,29 @@
+#[SI] units
+
+# Parameters chosen to ensure GW emission dominates mass loss (Inspiral regime)
+# Tighter orbit (a = 2e8 m) and lower decay rate.
+
+decay_rate = 1e-7
+M1 = 2.7846e30 
+M2 = 2.7846e30 
+a = 1.5e11  # Reduced from 1.5e11 to 2.0e8 to enhance GW effects
+e = 0.1    # Higher eccentricity to enhance GW emission
+
+[integration]
+output_points = 1000000
+use_cotime = true
+cotime_a_min = 1e1
+cotime_max_time = 1e20
+method = "Radau"
+decay_type = "linear"
+initial_points_exponent = 0
+exponent_offset = 13
+
+[rendering]
+width = 1920
+height = 1080
+fps = 60
+tail_length = 200
+star_scale = 5.0
+memory_gb = 10.0
+stride = 1000
