@@ -92,10 +92,13 @@ class MultiPlotter:
             plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
-        plt.legend(loc="best", fontsize=8)
+        plt.legend(loc="best", fontsize=8 * 1.25)  # 25% larger legend font
         plt.tight_layout()
-        full_path = f"{self.output_dir}/{name}.png"
-        plt.savefig(full_path, dpi=150)
+        base_path = f"{self.output_dir}/{name}"
+        # Save PNG
+        plt.savefig(f"{base_path}.png", dpi=150)
+        # Save EPS
+        plt.savefig(f"{base_path}.eps", format='eps')
         plt.close()
 
     def generate_plots(self):
