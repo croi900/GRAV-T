@@ -19,6 +19,8 @@ from equations import *
 import tomli as tomllib
 import argparse
 
+from multi_plotter import MultiPlotter
+
 from integration_run import IntegrationRun
 from name_maps import domain_type_map
 from orbit_plotter import OrbitPlotter
@@ -100,11 +102,12 @@ if __name__ == "__main__":
     )
 
     merger.run()
+    # plotter = MultiPlotter(config)
+    # plotter.plot("circularization")
 
     plotter = PolarizationPlotter(config)
-    plotter.plot("circularization")
     plotter.plot("merger")
 
-    plotter = OrbitPlotter(config)
+    # plotter = OrbitPlotter(config)
 
     #

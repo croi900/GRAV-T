@@ -29,19 +29,19 @@ class ODEPlotter(Plotter):
         m1_valid = m1_ds[valid_mask]
         m2_valid = m2_ds[valid_mask]
 
-        plt.plot(t_ds, a_ds)
+        plt.plot(t_ds, a_ds / 1e3)
         self.saveplot(
-            f"{run_name}/t_a", xlabel="Time (s)", ylabel="Semi-major axis a (m)"
+            f"{run_name}/t_a", xlabel=r"$t$ [s]", ylabel=r"$a$ [km]"
         )
 
         plt.plot(t_valid, e_valid)
-        self.saveplot(f"{run_name}/t_e", xlabel="Time (s)", ylabel="Eccentricity e")
+        self.saveplot(f"{run_name}/t_e", xlabel=r"$t$ [s]", ylabel=r"$e$")
 
         plt.plot(t_ds, m1_ds)
-        self.saveplot(f"{run_name}/t_m1", xlabel="Time (s)", ylabel="Mass M₁ (kg)")
+        self.saveplot(f"{run_name}/t_m1", xlabel=r"$t$ [s]", ylabel=r"$M_1$ [kg]")
 
         plt.plot(t_ds, m2_ds)
-        self.saveplot(f"{run_name}/t_m2", xlabel="Time (s)", ylabel="Mass M₂ (kg)")
+        self.saveplot(f"{run_name}/t_m2", xlabel=r"$t$ [s]", ylabel=r"$M_2$ [kg]")
 
         print(f"Computing E, L, P for {run_name}...")
 
@@ -68,25 +68,25 @@ class ODEPlotter(Plotter):
             delta_P[1:] = cumulative_trapezoid(dPdt, t_valid)
 
             plt.plot(t_valid, delta_E)
-            self.saveplot(f"{run_name}/t_E", xlabel="Time (s)", ylabel="ΔE (J)")
+            self.saveplot(f"{run_name}/t_E", xlabel=r"$t$ [s]", ylabel=r"$\Delta E$ [J]")
 
             plt.plot(t_valid, delta_L)
-            self.saveplot(f"{run_name}/t_L", xlabel="Time (s)", ylabel="ΔL (kg·m²/s)")
+            self.saveplot(f"{run_name}/t_L", xlabel=r"$t$ [s]", ylabel=r"$\Delta L$ [kg$\cdot$m$^2$/s]")
 
             plt.plot(t_valid, delta_P)
-            self.saveplot(f"{run_name}/t_P", xlabel="Time (s)", ylabel="ΔP (s)")
+            self.saveplot(f"{run_name}/t_P", xlabel=r"$t$ [s]", ylabel=r"$\Delta P$ [s]")
 
             plt.plot(t_valid, -dEdt)
-            self.saveplot(f"{run_name}/t_dEdt", xlabel="Time (s)", ylabel="-dE/dt (W)")
+            self.saveplot(f"{run_name}/t_dEdt", xlabel=r"$t$ [s]", ylabel=r"$-dE/dt$ [W]")
 
-            plt.plot(t_valid, dLdt)
+            plt.plot(t_valid, -dLdt)
             self.saveplot(
-                f"{run_name}/t_dLdt", xlabel="Time (s)", ylabel="dL/dt (kg·m²/s²)"
+                f"{run_name}/t_dLdt", xlabel=r"$t$ [s]", ylabel=r"$-dL/dt$ [kg$\cdot$m$^2$/s$^2$]"
             )
 
-            plt.plot(t_valid, -dPdt)
+            plt.plot(t_valid, dPdt)
             self.saveplot(
-                f"{run_name}/t_dPdt", xlabel="Time (s)", ylabel="-dP/dt (s/s)"
+                f"{run_name}/t_dPdt", xlabel=r"$t$ [s]", ylabel=r"$dP/dt$ [s/s]"
             )
 
         print(f"ODE plots saved for {run_name}")

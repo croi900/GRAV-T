@@ -47,7 +47,8 @@ if __name__ == "__main__":
         os.mkdir(config.name)
 
     multi_plotter = MultiPlotter(config)
-    for i, k in enumerate(np.array([1, 10, 20, 30])):
+    # for i, k in enumerate(np.array([1, 10, 20, 30])): # FOR EXPONENTIAL
+    for i, k in enumerate(np.array([1, 30, 60, 90])):
         config.state.decay_rate = k * initial_decay_rate
 
         cotime, _ = BinarySystemModelFast(config).coalescence_time(

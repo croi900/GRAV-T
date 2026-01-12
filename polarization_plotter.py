@@ -263,32 +263,32 @@ class PolarizationPlotter(Plotter):
 
         plt.plot(t_ds, phi_ds)
         self.saveplot(
-            f"{run_name}/phi_t", xlabel="Time (s)", ylabel="Orbital phase φ (rad)"
+            f"{run_name}/phi_t", xlabel=r"$t$ [s]", ylabel=r"$\phi$ [rad]"
         )
 
         plt.plot(t_ds, hp)
-        self.saveplot(f"{run_name}/t_hp", xlabel="Time (s)", ylabel="h₊ (strain)")
+        self.saveplot(f"{run_name}/t_hp", xlabel=r"$t$ [s]", ylabel=r"$h_+$")
 
         plt.plot(t_ds, hx)
-        self.saveplot(f"{run_name}/t_hx", xlabel="Time (s)", ylabel="h× (strain)")
+        self.saveplot(f"{run_name}/t_hx", xlabel=r"$t$ [s]", ylabel=r"$h_\times$")
 
-        plt.plot(t_ds, r_ds)
+        plt.plot(t_ds, r_ds / 1e3)
         self.saveplot(
-            f"{run_name}/t_r", xlabel="Time (s)", ylabel="Orbital radius r (m)"
+            f"{run_name}/t_r", xlabel=r"$t$ [s]", ylabel=r"$r$ [km]"
         )
 
         plt.plot(t_ds, f_GW)
-        self.saveplot(f"{run_name}/t_f_GW", xlabel="Time (s)", ylabel="f_GW (Hz)")
+        self.saveplot(f"{run_name}/t_f_GW", xlabel=r"$t$ [s]", ylabel=r"$f_{GW}$ [Hz]")
 
         plt.plot(t_ds, h_amp)
-        self.saveplot(f"{run_name}/t_h_amp", xlabel="Time (s)", ylabel="|h| (strain)")
+        self.saveplot(f"{run_name}/t_h_amp", xlabel=r"$t$ [s]", ylabel=r"$|h|$")
 
         plt.plot(t_ds, F_GW)
-        self.saveplot(f"{run_name}/t_F_GW", xlabel="Time (s)", ylabel="F_GW (W/m²)")
+        self.saveplot(f"{run_name}/t_F_GW", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]")
 
         plt.semilogy(t_ds, np.abs(F_GW) + 1e-100)
         self.saveplot(
-            f"{run_name}/t_F_GW_log", xlabel="Time (s)", ylabel="F_GW (W/m²) [log]"
+            f"{run_name}/t_F_GW_log", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]"
         )
 
         if len(t_focus) > 10:
@@ -296,36 +296,34 @@ class PolarizationPlotter(Plotter):
 
             plt.figure(figsize=(12, 4))
             plt.plot(t_before_merger, hp_focus, "b-", linewidth=0.5)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("h₊ (strain)")
-            plt.title(f"{run_name}: Merger Region h₊")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$h_+$")
+            plt.xlim(-1, 0)
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             self.saveplot(f"{run_name}/focus_hp")
 
             plt.figure(figsize=(12, 4))
             plt.plot(t_before_merger, hx_focus, "r-", linewidth=0.5)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("h× (strain)")
-            plt.title(f"{run_name}: Merger Region h×")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$h_\times$")
+            plt.xlim(-1, 0)
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             self.saveplot(f"{run_name}/focus_hx")
 
             plt.figure(figsize=(10, 6))
             plt.plot(t_before_merger, h_amp_focus, "b-", linewidth=1)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("|h| (strain)")
-            plt.title(f"{run_name}: Merger Region Amplitude")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$|h|$")
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             self.saveplot(f"{run_name}/focus_h_amp")
 
             plt.figure(figsize=(10, 6))
             plt.plot(t_before_merger, f_GW_focus, "g-", linewidth=1)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("f_GW (Hz)")
-            plt.title(f"{run_name}: Merger Region Frequency")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$f_{GW}$ [Hz]")
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             self.saveplot(f"{run_name}/focus_f_GW")
@@ -344,19 +342,18 @@ class PolarizationPlotter(Plotter):
                 color="blue",
                 label="Envelope",
             )
-            axes[0].set_ylabel("Strain h")
+            axes[0].set_ylabel(r"$h$")
             axes[0].legend(loc="upper left", fontsize=8)
             axes[0].grid(True, alpha=0.3)
-            axes[0].set_title(f"{run_name}: Gravitational Wave Signal (Merger Region)")
 
             axes[1].semilogy(-t_before_merger + 1e-10, h_amp_focus)
-            axes[1].set_ylabel("|h| (strain) [log]")
+            axes[1].set_ylabel(r"$|h|$")
             axes[1].grid(True, alpha=0.3)
             axes[1].invert_xaxis()
 
             axes[2].plot(t_before_merger, f_GW_focus, "g-", linewidth=1)
-            axes[2].set_ylabel("f_GW (Hz)")
-            axes[2].set_xlabel("Time before merger (s)")
+            axes[2].set_ylabel(r"$f_{GW}$ [Hz]")
+            axes[2].set_xlabel(r"$t$ [s]")
             axes[2].grid(True, alpha=0.3)
 
             plt.tight_layout()
@@ -380,18 +377,16 @@ class PolarizationPlotter(Plotter):
 
             plt.figure(figsize=(12, 4))
             plt.plot(t_before_merger, hp_chirp, "b-", linewidth=0.5)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("h₊ (strain)")
-            plt.title("Gravitational Wave Chirp")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$h_+$")
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             self.saveplot(f"{run_name}/chirp_hp")
 
             plt.figure(figsize=(10, 6))
             plt.semilogy(-t_before_merger + 1e-10, h_amp_chirp)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("|h| (strain)")
-            plt.title("Amplitude Evolution (Chirp)")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$|h|$")
             plt.gca().invert_xaxis()
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
@@ -399,9 +394,8 @@ class PolarizationPlotter(Plotter):
 
             plt.figure(figsize=(10, 6))
             plt.plot(t_before_merger, f_GW_chirp)
-            plt.xlabel("Time before merger (s)")
-            plt.ylabel("f_GW (Hz)")
-            plt.title("Frequency Chirp")
+            plt.xlabel(r"$t$ [s]")
+            plt.ylabel(r"$f_{GW}$ [Hz]")
             plt.grid(True, alpha=0.3)
             plt.tight_layout()
             self.saveplot(f"{run_name}/chirp_frequency")
@@ -417,14 +411,13 @@ class PolarizationPlotter(Plotter):
                 color="blue",
                 label="Envelope",
             )
-            ax1.set_ylabel("Strain h")
+            ax1.set_ylabel(r"$h$")
             ax1.legend(loc="upper left")
             ax1.grid(True, alpha=0.3)
-            ax1.set_title("Gravitational Wave Signal (Chirp Region)")
 
             ax2.plot(t_before_merger, f_GW_chirp, "r-", linewidth=1)
-            ax2.set_ylabel("Frequency (Hz)")
-            ax2.set_xlabel("Time before merger (s)")
+            ax2.set_ylabel(r"$f$ [Hz]")
+            ax2.set_xlabel(r"$t$ [s]")
             ax2.grid(True, alpha=0.3)
 
             plt.tight_layout()
@@ -436,9 +429,8 @@ class PolarizationPlotter(Plotter):
             f_sorted = f_GW_chirp[sort_idx]
             h_sorted = h_amp_chirp[sort_idx]
             plt.loglog(f_sorted, h_sorted)
-            plt.xlabel("Frequency (Hz)")
-            plt.ylabel("|h| (strain)")
-            plt.title("Strain vs Frequency")
+            plt.xlabel(r"$f$ [Hz]")
+            plt.ylabel(r"$|h|$")
             plt.grid(True, alpha=0.3, which="both")
             plt.tight_layout()
             self.saveplot(f"{run_name}/strain_vs_frequency")
@@ -456,18 +448,17 @@ class PolarizationPlotter(Plotter):
                 fig, axes = plt.subplots(3, 1, figsize=(12, 10), sharex=True)
 
                 axes[0].plot(t_window, hp_window, "b-", linewidth=0.5)
-                axes[0].set_ylabel("h₊ (strain)")
-                axes[0].set_title(f"Last {window_sec}s Before Merger")
+                axes[0].set_ylabel(r"$h_+$")
                 axes[0].grid(True, alpha=0.3)
 
                 axes[1].semilogy(-t_window + 1e-10, h_amp_window)
-                axes[1].set_ylabel("|h| (strain)")
+                axes[1].set_ylabel(r"$|h|$")
                 axes[1].grid(True, alpha=0.3)
                 axes[1].invert_xaxis()
 
                 axes[2].plot(t_window, f_GW_window, "r-")
-                axes[2].set_ylabel("f_GW (Hz)")
-                axes[2].set_xlabel("Time before merger (s)")
+                axes[2].set_ylabel(r"$f_{GW}$ [Hz]")
+                axes[2].set_xlabel(r"$t$ [s]")
                 axes[2].grid(True, alpha=0.3)
 
                 plt.tight_layout()

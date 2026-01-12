@@ -102,12 +102,9 @@ class MultiPlotter:
     def saveplot(
         self,
         name: str,
-        title: str = "",
         xlabel: str = "Unnamed",
         ylabel: str = "Unnamed",
     ):
-        if title:
-            plt.title(title)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.legend(loc="best", fontsize=8 * 1.25)  # 25% larger legend font
@@ -185,20 +182,36 @@ class MultiPlotter:
             for d in all_data
         ]
 
+        # Time to impact plot: X = decay rate, Y = time to impact
         plt.figure(figsize=(6, 6))
+        decay_rates = [d["actual_decay_rate"] for d in all_data]
+        impact_times = [d["t"][-1] for d in all_data]  # Final time = time to impact
+        
         for i, data in enumerate(all_data):
-            plt.plot(
-                data["t_clip"],
-                data["a_clip"],
+            plt.scatter(
+                data["actual_decay_rate"],
+                data["t"][-1],
                 color=colors[i],
-                label=labels[i],
+                marker='s',
+                s=100,
                 alpha=0.8,
+                zorder=3,
             )
+            # Add label next to each point
+            plt.annotate(
+                labels[i],
+                (data["actual_decay_rate"], data["t"][-1]),
+                textcoords="offset points",
+                xytext=(10, 5),
+                fontsize=8 * 1.25,
+                color=colors[i],
+            )
+        
+        plt.xscale('log')
         self.saveplot(
-            "t_a_comparison",
-            title="Semi-major Axis vs Time",
-            xlabel="Time (s)",
-            ylabel="Semi-major axis a (m)",
+            "time_to_impact",
+            xlabel=r"Decay Rate $\omega$ [s$^{-1}$]" if self.config.decay_type == 'exponential' else r"Decay Rate $k$ [kg/s]",
+            ylabel=r"Time to Impact [s]",
         )
 
         plt.figure(figsize=(6, 6))
@@ -212,9 +225,8 @@ class MultiPlotter:
             )
         self.saveplot(
             "t_e_comparison",
-            title="Eccentricity vs Time",
-            xlabel="Time (s)",
-            ylabel="Eccentricity e",
+            xlabel=r"$t$ [s]",
+            ylabel=r"$e$",
         )
 
         plt.figure(figsize=(6, 6))
@@ -228,9 +240,8 @@ class MultiPlotter:
             )
         self.saveplot(
             "t_m1_comparison",
-            title="Mass M₁ vs Time",
-            xlabel="Time (s)",
-            ylabel="Mass M₁ (kg)",
+            xlabel=r"$t$ [s]",
+            ylabel=r"$M_1$ [kg]",
         )
 
         plt.figure(figsize=(6, 6))
@@ -244,9 +255,8 @@ class MultiPlotter:
             )
         self.saveplot(
             "t_m2_comparison",
-            title="Mass M₂ vs Time",
-            xlabel="Time (s)",
-            ylabel="Mass M₂ (kg)",
+            xlabel=r"$t$ [s]",
+            ylabel=r"$M_2$ [kg]",
         )
 
         print("Computing E, L, P for all datasets...")
@@ -277,9 +287,8 @@ class MultiPlotter:
                     )
             self.saveplot(
                 "t_E_comparison",
-                title="Energy Change vs Time",
-                xlabel="Time (s)",
-                ylabel="ΔE (J)",
+                xlabel=r"$t$ [s]",
+                ylabel=r"$\Delta E$ [J]",
             )
 
             plt.figure(figsize=(6, 6))
@@ -294,9 +303,8 @@ class MultiPlotter:
                     )
             self.saveplot(
                 "t_L_comparison",
-                title="Angular Momentum Change vs Time",
-                xlabel="Time (s)",
-                ylabel="ΔL (kg·m²/s)",
+                xlabel=r"$t$ [s]",
+                ylabel=r"$\Delta L$ [kg$\cdot$m$^2$/s]",
             )
 
             plt.figure(figsize=(6, 6))
@@ -311,9 +319,8 @@ class MultiPlotter:
                     )
             self.saveplot(
                 "t_P_comparison",
-                title="Period Change vs Time",
-                xlabel="Time (s)",
-                ylabel="ΔP (s)",
+                xlabel=r"$t$ [s]",
+                ylabel=r"$\Delta P$ [s]",
             )
 
             plt.figure(figsize=(6, 6))
@@ -328,9 +335,8 @@ class MultiPlotter:
                     )
             self.saveplot(
                 "t_dEdt_comparison",
-                title="Energy Rate vs Time",
-                xlabel="Time (s)",
-                ylabel="-dE/dt (W)",
+                xlabel=r"$t$ [s]",
+                ylabel=r"$-dE/dt$ [W]",
             )
 
             plt.figure(figsize=(6, 6))
@@ -338,16 +344,15 @@ class MultiPlotter:
                 if "dLdt" in data:
                     plt.plot(
                         data["t_valid_clip"],
-                        data["dLdt"],
+                        -data["dLdt"],
                         color=colors[i],
                         label=labels[i],
                         alpha=0.8,
                     )
             self.saveplot(
                 "t_dLdt_comparison",
-                title="Angular Momentum Rate vs Time",
-                xlabel="Time (s)",
-                ylabel="dL/dt (kg·m²/s²)",
+                xlabel=r"$t$ [s]",
+                ylabel=r"$-dL/dt$ [kg$\cdot$m$^2$/s$^2$]",
             )
 
             plt.figure(figsize=(6, 6))
@@ -355,16 +360,15 @@ class MultiPlotter:
                 if "dPdt" in data:
                     plt.plot(
                         data["t_valid_clip"],
-                        -data["dPdt"],
+                        data["dPdt"],
                         color=colors[i],
                         label=labels[i],
                         alpha=0.8,
                     )
             self.saveplot(
                 "t_dPdt_comparison",
-                title="Period Rate vs Time",
-                xlabel="Time (s)",
-                ylabel="-dP/dt (s/s)",
+                xlabel=r"$t$ [s]",
+                ylabel=r"$dP/dt$ [s/s]",
             )
 
         print(f"Multi-comparison plots saved to {self.output_dir}/")
