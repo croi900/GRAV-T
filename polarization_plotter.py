@@ -259,210 +259,106 @@ class PolarizationPlotter(Plotter):
 
         t_before_merger = t_focus - t_focus[-1]
 
-        print(f"Creating standard plots...")
+        # Commented out: standard full-range plots
+        # print(f"Creating standard plots...")
 
-        plt.plot(t_ds, phi_ds)
-        self.saveplot(
-            f"{run_name}/phi_t", xlabel=r"$t$ [s]", ylabel=r"$\phi$ [rad]"
-        )
+        # plt.plot(t_ds, phi_ds)
+        # self.saveplot(
+        #     f"{run_name}/phi_t", xlabel=r"$t$ [s]", ylabel=r"$\phi$ [rad]"
+        # )
 
-        plt.plot(t_ds, hp)
-        self.saveplot(f"{run_name}/t_hp", xlabel=r"$t$ [s]", ylabel=r"$h_+$")
+        # plt.plot(t_ds, hp)
+        # self.saveplot(f"{run_name}/t_hp", xlabel=r"$t$ [s]", ylabel=r"$h_+$")
 
-        plt.plot(t_ds, hx)
-        self.saveplot(f"{run_name}/t_hx", xlabel=r"$t$ [s]", ylabel=r"$h_\times$")
+        # plt.plot(t_ds, hx)
+        # self.saveplot(f"{run_name}/t_hx", xlabel=r"$t$ [s]", ylabel=r"$h_\times$")
 
-        plt.plot(t_ds, r_ds / 1e3)
-        self.saveplot(
-            f"{run_name}/t_r", xlabel=r"$t$ [s]", ylabel=r"$r$ [km]"
-        )
+        # plt.plot(t_ds, r_ds / 1e3)
+        # self.saveplot(
+        #     f"{run_name}/t_r", xlabel=r"$t$ [s]", ylabel=r"$r$ [km]"
+        # )
 
-        plt.plot(t_ds, f_GW)
-        self.saveplot(f"{run_name}/t_f_GW", xlabel=r"$t$ [s]", ylabel=r"$f_{GW}$ [Hz]")
+        # plt.plot(t_ds, f_GW)
+        # self.saveplot(f"{run_name}/t_f_GW", xlabel=r"$t$ [s]", ylabel=r"$f_{GW}$ [Hz]")
 
-        plt.plot(t_ds, h_amp)
-        self.saveplot(f"{run_name}/t_h_amp", xlabel=r"$t$ [s]", ylabel=r"$|h|$")
+        # plt.plot(t_ds, h_amp)
+        # self.saveplot(f"{run_name}/t_h_amp", xlabel=r"$t$ [s]", ylabel=r"$|h|$")
 
-        plt.plot(t_ds, F_GW)
-        self.saveplot(f"{run_name}/t_F_GW", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]")
+        # plt.plot(t_ds, F_GW)
+        # self.saveplot(f"{run_name}/t_F_GW", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]")
 
-        plt.semilogy(t_ds, np.abs(F_GW) + 1e-100)
-        self.saveplot(
-            f"{run_name}/t_F_GW_log", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]"
-        )
+        # plt.semilogy(t_ds, np.abs(F_GW) + 1e-100)
+        # self.saveplot(
+        #     f"{run_name}/t_F_GW_log", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]"
+        # )
 
+
+        # Focused plots for t=-1 to 0 seconds: frequency, strain, hp, hx
         if len(t_focus) > 10:
-            print(f"Creating focused merger region plots ({len(t_focus)} points)...")
+            print(f"Creating focused plots for t=-1 to 0s ({len(t_focus)} points)...")
 
-            plt.figure(figsize=(12, 4))
-            plt.plot(t_before_merger, hp_focus, "b-", linewidth=0.5)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$h_+$")
-            plt.xlim(-1, 0)
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/focus_hp")
+            # Create t=-1 to 0 mask
+            final_mask = (t_before_merger >= -1) & (t_before_merger <= 0)
+            if np.sum(final_mask) > 10:
+                t_final = t_before_merger[final_mask]
+                hp_final = hp_focus[final_mask]
+                hx_final = hx_focus[final_mask]
+                h_amp_final = h_amp_focus[final_mask]
+                f_GW_final = f_GW_focus[final_mask]
 
-            plt.figure(figsize=(12, 4))
-            plt.plot(t_before_merger, hx_focus, "r-", linewidth=0.5)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$h_\times$")
-            plt.xlim(-1, 0)
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/focus_hx")
-
-            plt.figure(figsize=(10, 6))
-            plt.plot(t_before_merger, h_amp_focus, "b-", linewidth=1)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$|h|$")
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/focus_h_amp")
-
-            plt.figure(figsize=(10, 6))
-            plt.plot(t_before_merger, f_GW_focus, "g-", linewidth=1)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$f_{GW}$ [Hz]")
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/focus_f_GW")
-
-            fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
-
-            axes[0].plot(t_before_merger, hp_focus, "b-", linewidth=0.5, label="h₊")
-            axes[0].plot(
-                t_before_merger, hx_focus, "r-", linewidth=0.5, alpha=0.5, label="h×"
-            )
-            axes[0].fill_between(
-                t_before_merger,
-                -h_amp_focus,
-                h_amp_focus,
-                alpha=0.2,
-                color="blue",
-                label="Envelope",
-            )
-            axes[0].set_ylabel(r"$h$")
-            axes[0].legend(loc="upper left", fontsize=8)
-            axes[0].grid(True, alpha=0.3)
-
-            axes[1].semilogy(-t_before_merger + 1e-10, h_amp_focus)
-            axes[1].set_ylabel(r"$|h|$")
-            axes[1].grid(True, alpha=0.3)
-            axes[1].invert_xaxis()
-
-            axes[2].plot(t_before_merger, f_GW_focus, "g-", linewidth=1)
-            axes[2].set_ylabel(r"$f_{GW}$ [Hz]")
-            axes[2].set_xlabel(r"$t$ [s]")
-            axes[2].grid(True, alpha=0.3)
-
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/focus_combined")
-
-        print(f"Creating chirp analysis plots...")
-
-        t_chirp_start, t_chirp_end, peak_idx = find_chirp_region(
-            t_ds, h_amp, window_seconds=1.0
-        )
-        chirp_mask = (t_ds >= t_chirp_start) & (t_ds <= t_chirp_end)
-
-        if np.sum(chirp_mask) > 10:
-            t_chirp = t_ds[chirp_mask]
-            hp_chirp = hp[chirp_mask]
-            hx_chirp = hx[chirp_mask]
-            h_amp_chirp = h_amp[chirp_mask]
-            f_GW_chirp = f_GW[chirp_mask]
-
-            t_before_merger = t_chirp - t_chirp[-1]
-
-            plt.figure(figsize=(12, 4))
-            plt.plot(t_before_merger, hp_chirp, "b-", linewidth=0.5)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$h_+$")
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/chirp_hp")
-
-            plt.figure(figsize=(10, 6))
-            plt.semilogy(-t_before_merger + 1e-10, h_amp_chirp)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$|h|$")
-            plt.gca().invert_xaxis()
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/chirp_amplitude")
-
-            plt.figure(figsize=(10, 6))
-            plt.plot(t_before_merger, f_GW_chirp)
-            plt.xlabel(r"$t$ [s]")
-            plt.ylabel(r"$f_{GW}$ [Hz]")
-            plt.grid(True, alpha=0.3)
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/chirp_frequency")
-
-            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
-
-            ax1.plot(t_before_merger, hp_chirp, "b-", linewidth=0.5, label="h₊")
-            ax1.fill_between(
-                t_before_merger,
-                -h_amp_chirp,
-                h_amp_chirp,
-                alpha=0.3,
-                color="blue",
-                label="Envelope",
-            )
-            ax1.set_ylabel(r"$h$")
-            ax1.legend(loc="upper left")
-            ax1.grid(True, alpha=0.3)
-
-            ax2.plot(t_before_merger, f_GW_chirp, "r-", linewidth=1)
-            ax2.set_ylabel(r"$f$ [Hz]")
-            ax2.set_xlabel(r"$t$ [s]")
-            ax2.grid(True, alpha=0.3)
-
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/chirp_combined")
-
-            plt.figure(figsize=(10, 6))
-
-            sort_idx = np.argsort(f_GW_chirp)
-            f_sorted = f_GW_chirp[sort_idx]
-            h_sorted = h_amp_chirp[sort_idx]
-            plt.loglog(f_sorted, h_sorted)
-            plt.xlabel(r"$f$ [Hz]")
-            plt.ylabel(r"$|h|$")
-            plt.grid(True, alpha=0.3, which="both")
-            plt.tight_layout()
-            self.saveplot(f"{run_name}/strain_vs_frequency")
-
-        for window_sec in [10.0, 1.0, 0.1]:
-            t_start = t_ds[-1] - window_sec
-            mask = t_ds >= t_start
-
-            if np.sum(mask) > 10:
-                t_window = t_ds[mask] - t_ds[-1]
-                hp_window = hp[mask]
-                h_amp_window = h_amp[mask]
-                f_GW_window = f_GW[mask]
-
-                fig, axes = plt.subplots(3, 1, figsize=(12, 10), sharex=True)
-
-                axes[0].plot(t_window, hp_window, "b-", linewidth=0.5)
-                axes[0].set_ylabel(r"$h_+$")
-                axes[0].grid(True, alpha=0.3)
-
-                axes[1].semilogy(-t_window + 1e-10, h_amp_window)
-                axes[1].set_ylabel(r"$|h|$")
-                axes[1].grid(True, alpha=0.3)
-                axes[1].invert_xaxis()
-
-                axes[2].plot(t_window, f_GW_window, "r-")
-                axes[2].set_ylabel(r"$f_{GW}$ [Hz]")
-                axes[2].set_xlabel(r"$t$ [s]")
-                axes[2].grid(True, alpha=0.3)
-
+                # h+ plot
+                plt.figure(figsize=(12, 4))
+                plt.plot(t_final, hp_final, "b-", linewidth=0.5)
+                plt.xlabel(r"$t$ [s]")
+                plt.ylabel(r"$h_+$")
+                plt.xlim(-1, 0)
+                plt.grid(True, alpha=0.3)
                 plt.tight_layout()
-                self.saveplot(f"{run_name}/final_{window_sec:.1f}s")
+                self.saveplot(f"{run_name}/focus_hp")
+
+                # hx plot
+                plt.figure(figsize=(12, 4))
+                plt.plot(t_final, hx_final, "r-", linewidth=0.5)
+                plt.xlabel(r"$t$ [s]")
+                plt.ylabel(r"$h_\times$")
+                plt.xlim(-1, 0)
+                plt.grid(True, alpha=0.3)
+                plt.tight_layout()
+                self.saveplot(f"{run_name}/focus_hx")
+
+                # Strain amplitude plot
+                plt.figure(figsize=(10, 6))
+                plt.plot(t_final, h_amp_final, "b-", linewidth=1)
+                plt.xlabel(r"$t$ [s]")
+                plt.ylabel(r"$|h|$")
+                plt.xlim(-1, 0)
+                plt.grid(True, alpha=0.3)
+                plt.tight_layout()
+                self.saveplot(f"{run_name}/focus_h_amp")
+
+                # Frequency plot
+                plt.figure(figsize=(10, 6))
+                plt.plot(t_final, f_GW_final, "g-", linewidth=1)
+                plt.xlabel(r"$t$ [s]")
+                plt.ylabel(r"$f_{GW}$ [Hz]")
+                plt.xlim(-1, 0)
+                plt.grid(True, alpha=0.3)
+                plt.tight_layout()
+                self.saveplot(f"{run_name}/focus_f_GW")
+
+            # Commented out: focus_combined plot
+            # fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
+            # ...
+
+
+        # Commented out: chirp analysis plots
+        # print(f"Creating chirp analysis plots...")
+        # t_chirp_start, t_chirp_end, peak_idx = find_chirp_region(...)
+        # ...
+
+        # Commented out: final window plots (10s, 1s, 0.1s)
+        # for window_sec in [10.0, 1.0, 0.1]:
+        #     ...
 
         print(f"\n--- Summary for {run_name} ---")
         print(f"  Duration: {t_ds[-1] - t_ds[0]:.4e} s")

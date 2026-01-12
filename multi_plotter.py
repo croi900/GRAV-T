@@ -182,43 +182,27 @@ class MultiPlotter:
             for d in all_data
         ]
 
-        # Time to impact plot: X = decay rate, Y = time to impact
+        AU = 1.496e11  # meters per AU
         plt.figure(figsize=(6, 6))
-        decay_rates = [d["actual_decay_rate"] for d in all_data]
-        impact_times = [d["t"][-1] for d in all_data]  # Final time = time to impact
-        
         for i, data in enumerate(all_data):
-            plt.scatter(
-                data["actual_decay_rate"],
-                data["t"][-1],
+            plt.plot(
+                data["t_clip"][2:],  # Skip first 2 elements to avoid solver warm-up anomaly
+                data["a_clip"][2:] / AU,
                 color=colors[i],
-                marker='s',
-                s=100,
+                label=labels[i],
                 alpha=0.8,
-                zorder=3,
             )
-            # Add label next to each point
-            plt.annotate(
-                labels[i],
-                (data["actual_decay_rate"], data["t"][-1]),
-                textcoords="offset points",
-                xytext=(10, 5),
-                fontsize=8 * 1.25,
-                color=colors[i],
-            )
-        
-        plt.xscale('log')
         self.saveplot(
-            "time_to_impact",
-            xlabel=r"Decay Rate $\omega$ [s$^{-1}$]" if self.config.decay_type == 'exponential' else r"Decay Rate $k$ [kg/s]",
-            ylabel=r"Time to Impact [s]",
+            "t_a_comparison",
+            xlabel=r"$t$ [s]",
+            ylabel=r"$a$ [AU]",
         )
 
         plt.figure(figsize=(6, 6))
         for i, data in enumerate(all_data):
             plt.plot(
-                data["t_valid_clip"],
-                data["e_valid_clip"],
+                data["t_valid_clip"][2:],
+                data["e_valid_clip"][2:],
                 color=colors[i],
                 label=labels[i],
                 alpha=0.8,
@@ -229,35 +213,37 @@ class MultiPlotter:
             ylabel=r"$e$",
         )
 
-        plt.figure(figsize=(6, 6))
-        for i, data in enumerate(all_data):
-            plt.plot(
-                data["t_clip"],
-                data["m1_clip"],
-                color=colors[i],
-                label=labels[i],
-                alpha=0.8,
-            )
-        self.saveplot(
-            "t_m1_comparison",
-            xlabel=r"$t$ [s]",
-            ylabel=r"$M_1$ [kg]",
-        )
+        # Commented out: m1 and m2 comparison plots
+        # plt.figure(figsize=(6, 6))
+        # for i, data in enumerate(all_data):
+        #     plt.plot(
+        #         data["t_clip"][2:],
+        #         data["m1_clip"][2:],
+        #         color=colors[i],
+        #         label=labels[i],
+        #         alpha=0.8,
+        #     )
+        # self.saveplot(
+        #     "t_m1_comparison",
+        #     xlabel=r"$t$ [s]",
+        #     ylabel=r"$M_1$ [kg]",
+        # )
 
-        plt.figure(figsize=(6, 6))
-        for i, data in enumerate(all_data):
-            plt.plot(
-                data["t_clip"],
-                data["m2_clip"],
-                color=colors[i],
-                label=labels[i],
-                alpha=0.8,
-            )
-        self.saveplot(
-            "t_m2_comparison",
-            xlabel=r"$t$ [s]",
-            ylabel=r"$M_2$ [kg]",
-        )
+        # plt.figure(figsize=(6, 6))
+        # for i, data in enumerate(all_data):
+        #     plt.plot(
+        #         data["t_clip"][2:],
+        #         data["m2_clip"][2:],
+        #         color=colors[i],
+        #         label=labels[i],
+        #         alpha=0.8,
+        #     )
+        # self.saveplot(
+        #     "t_m2_comparison",
+        #     xlabel=r"$t$ [s]",
+        #     ylabel=r"$M_2$ [kg]",
+        # )
+
 
         print("Computing E, L, P for all datasets...")
         for data in all_data:
@@ -275,60 +261,61 @@ class MultiPlotter:
         )
 
         if has_derived:
-            plt.figure(figsize=(6, 6))
-            for i, data in enumerate(all_data):
-                if "delta_E" in data:
-                    plt.plot(
-                        data["t_valid_clip"],
-                        data["delta_E"],
-                        color=colors[i],
-                        label=labels[i],
-                        alpha=0.8,
-                    )
-            self.saveplot(
-                "t_E_comparison",
-                xlabel=r"$t$ [s]",
-                ylabel=r"$\Delta E$ [J]",
-            )
+            # Commented out: delta_E, delta_L, delta_P plots
+            # plt.figure(figsize=(6, 6))
+            # for i, data in enumerate(all_data):
+            #     if "delta_E" in data:
+            #         plt.plot(
+            #             data["t_valid_clip"][2:],
+            #             data["delta_E"][2:],
+            #             color=colors[i],
+            #             label=labels[i],
+            #             alpha=0.8,
+            #         )
+            # self.saveplot(
+            #     "t_E_comparison",
+            #     xlabel=r"$t$ [s]",
+            #     ylabel=r"$\Delta E$ [J]",
+            # )
 
-            plt.figure(figsize=(6, 6))
-            for i, data in enumerate(all_data):
-                if "delta_L" in data:
-                    plt.plot(
-                        data["t_valid_clip"],
-                        data["delta_L"],
-                        color=colors[i],
-                        label=labels[i],
-                        alpha=0.8,
-                    )
-            self.saveplot(
-                "t_L_comparison",
-                xlabel=r"$t$ [s]",
-                ylabel=r"$\Delta L$ [kg$\cdot$m$^2$/s]",
-            )
+            # plt.figure(figsize=(6, 6))
+            # for i, data in enumerate(all_data):
+            #     if "delta_L" in data:
+            #         plt.plot(
+            #             data["t_valid_clip"][2:],
+            #             data["delta_L"][2:],
+            #             color=colors[i],
+            #             label=labels[i],
+            #             alpha=0.8,
+            #         )
+            # self.saveplot(
+            #     "t_L_comparison",
+            #     xlabel=r"$t$ [s]",
+            #     ylabel=r"$\Delta L$ [kg$\cdot$m$^2$/s]",
+            # )
 
-            plt.figure(figsize=(6, 6))
-            for i, data in enumerate(all_data):
-                if "delta_P" in data:
-                    plt.plot(
-                        data["t_valid_clip"],
-                        data["delta_P"],
-                        color=colors[i],
-                        label=labels[i],
-                        alpha=0.8,
-                    )
-            self.saveplot(
-                "t_P_comparison",
-                xlabel=r"$t$ [s]",
-                ylabel=r"$\Delta P$ [s]",
-            )
+            # plt.figure(figsize=(6, 6))
+            # for i, data in enumerate(all_data):
+            #     if "delta_P" in data:
+            #         plt.plot(
+            #             data["t_valid_clip"][2:],
+            #             data["delta_P"][2:],
+            #             color=colors[i],
+            #             label=labels[i],
+            #             alpha=0.8,
+            #         )
+            # self.saveplot(
+            #     "t_P_comparison",
+            #     xlabel=r"$t$ [s]",
+            #     ylabel=r"$\Delta P$ [s]",
+            # )
 
             plt.figure(figsize=(6, 6))
             for i, data in enumerate(all_data):
                 if "dEdt" in data:
                     plt.plot(
-                        data["t_valid_clip"],
-                        -data["dEdt"],
+                        data["t_valid_clip"][2:],
+                        -data["dEdt"][2:],
                         color=colors[i],
                         label=labels[i],
                         alpha=0.8,
@@ -343,8 +330,8 @@ class MultiPlotter:
             for i, data in enumerate(all_data):
                 if "dLdt" in data:
                     plt.plot(
-                        data["t_valid_clip"],
-                        -data["dLdt"],
+                        data["t_valid_clip"][2:],
+                        -data["dLdt"][2:],
                         color=colors[i],
                         label=labels[i],
                         alpha=0.8,
@@ -359,8 +346,8 @@ class MultiPlotter:
             for i, data in enumerate(all_data):
                 if "dPdt" in data:
                     plt.plot(
-                        data["t_valid_clip"],
-                        data["dPdt"],
+                        data["t_valid_clip"][2:],
+                        data["dPdt"][2:],
                         color=colors[i],
                         label=labels[i],
                         alpha=0.8,
