@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from scipy.integrate import cumulative_trapezoid
 
 from config import Config
-from equations import BinarySystemModelFast
+from equations import BinarySystemModelFast, AnalyticMassFunction
 
 # Check if inkscape is available for PDF→EPS conversion with transparency
 _INKSCAPE_AVAILABLE = shutil.which('inkscape') is not None
@@ -29,9 +29,9 @@ def _pdf_to_eps(pdf_path: str, eps_path: str) -> bool:
         return False
 
 
-class MultiPlotter:
+class MultiPlotterMass:
     """
-    Plotter that accumulates multiple datasets and creates overlayed comparison plots.
+    Plotter that accumulates multiple datasets varying by Mass (M1, M2) and creates overlayed comparison plots.
     Call add_dataset() for each run, then generate_plots() at the end.
     """
 
@@ -41,12 +41,20 @@ class MultiPlotter:
         self.output_dir = f"{config.name}/ode_plots/multi"
         Path(self.output_dir).mkdir(parents=True, exist_ok=True)
 
+        # Store run_name, m1, m2
         self.datasets: list[tuple[str, float, float]] = []
 
-    def add_dataset(self, run_name: str, k_factor: float, actual_decay_rate: float):
-        self.datasets.append((run_name, k_factor, actual_decay_rate))
+    def add_dataset(self, run_name: str, m1: float, m2: float):
+        """
+        Add a dataset to the plotter.
+        Args:
+            run_name: Name of the HDF5 group
+            m1: Mass 1 in Solar Masses
+            m2: Mass 2 in Solar Masses
+        """
+        self.datasets.append((run_name, m1, m2))
         print(
-            f"MultiPlotter: Added dataset '{run_name}' with decay_rate={actual_decay_rate:.3e}"
+            f"MultiPlotterMass: Added dataset '{run_name}' with M1={m1:.2f} M_sun, M2={m2:.2f} M_sun"
         )
 
     def _load_run_data(self, f: h5py.File, run_name: str) -> dict:
@@ -61,8 +69,35 @@ class MultiPlotter:
     def _compute_derived_quantities(
         self, data: dict, t_valid: np.ndarray, a_valid: np.ndarray, e_valid: np.ndarray
     ) -> dict:
+        # Crucial: Update config with the correct masses for this run to compute derived quantities correctly
+        # We assume masses are constant parameters in config but varying here?
+        # BinarySystemModelFast uses config.state.M1/M2 if passed config
+        
+        # Save original state
+        original_m1 = self.config.state.M1
+        original_m2 = self.config.state.M2
+        
+        # Update state (converting M_sun to kg handled where? 
+        # In variable_mass.py: config.state.m1 = k * M_SUN. 
+        # Note: Config object has properties M1, M2 that might read from state?
+        # Let's check how BinarySystemModelFast initializes.
+        # It reads config.state.M1 / M2.
+        
+        # We need to ensure we set the correct values. 
+        # data["m1_val"] and data["m2_val"] stored in generate_plots are in Solar Masses?
+        # variable_mass.py passes m, k (which are multipliers of M_SUN).
+        # stored in self.datasets as multipliers.
+        from config import M_SUN
+        
+        self.config.state.M1 = data["m1_val"] * M_SUN
+        self.config.state.M2 = data["m2_val"] * M_SUN
+        
+        # Also need to reset mass functions? 
+        # BinarySystemModelFast __init__ creates mass_fun_1/2 based on decay_rate.
+        # If decay rate is constant across mass variations, that's fine.
+        
         system = BinarySystemModelFast(self.config)
-
+        
         n_points = len(t_valid)
         dEdt = np.zeros(n_points)
         dLdt = np.zeros(n_points)
@@ -97,6 +132,10 @@ class MultiPlotter:
                 }
             )
 
+        # Restore original state
+        self.config.state.M1 = original_m1
+        self.config.state.M2 = original_m2
+
         return derived
 
     def saveplot(
@@ -104,28 +143,29 @@ class MultiPlotter:
         name: str,
         xlabel: str = "Unnamed",
         ylabel: str = "Unnamed",
+        xlim: tuple = None,
     ):
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
+        if xlim is not None:
+            plt.xlim(xlim)
         plt.legend(loc="best", fontsize=8 * 1.25)  # 25% larger legend font
         plt.tight_layout()
         base_path = f"{self.output_dir}/{name}"
         # Save PNG
         plt.savefig(f"{base_path}.png", dpi=150)
         
-        # Save EPS - use PDF→EPS conversion if inkscape available (preserves transparency)
+        # Save EPS
         if _INKSCAPE_AVAILABLE:
             pdf_path = f"{base_path}.pdf"
             eps_path = f"{base_path}.eps"
             plt.savefig(pdf_path, format='pdf')
             if _pdf_to_eps(pdf_path, eps_path):
-                os.remove(pdf_path)  # Clean up intermediate PDF
+                os.remove(pdf_path)
             else:
-                # Fallback to direct EPS if conversion failed
                 plt.savefig(eps_path, format='eps')
                 os.remove(pdf_path)
         else:
-            # No inkscape available, use direct EPS (no transparency support)
             plt.savefig(f"{base_path}.eps", format='eps')
         
         plt.close()
@@ -143,10 +183,10 @@ class MultiPlotter:
 
         all_data = []
         with h5py.File(self.h5path, "r") as f:
-            for run_name, k_factor, actual_decay_rate in self.datasets:
+            for run_name, m1, m2 in self.datasets:
                 data = self._load_run_data(f, run_name)
-                data["k_factor"] = k_factor
-                data["actual_decay_rate"] = actual_decay_rate
+                data["m1_val"] = m1
+                data["m2_val"] = m2
                 data["run_name"] = run_name
 
                 valid_mask = data["e"] > 1e-6
@@ -158,6 +198,7 @@ class MultiPlotter:
 
                 all_data.append(data)
 
+        # Calculate common x-axis limit
         t_max = min(data["t"][-1] for data in all_data if len(data["t"]) > 0)
         t_max_valid = min(
             data["t_valid"][-1] for data in all_data if len(data["t_valid"]) > 0
@@ -177,8 +218,9 @@ class MultiPlotter:
             data["m1_valid_clip"] = data["m1_valid"][clip_mask_valid]
             data["m2_valid_clip"] = data["m2_valid"][clip_mask_valid]
 
+        # Labels based on Mass
         labels = [
-            rf"${'\omega' if self.config.decay_type == 'exponential' else 'k'} = {f'{d["actual_decay_rate"]:.2e}'.split('e')[0]} \times 10^{{{int(f'{d["actual_decay_rate"]:.2e}'.split('e')[1])}}}$ $s^{{-1}}$"
+            rf"$M_1={d['m1_val']:.1f}M_\odot, M_2={d['m2_val']:.1f}M_\odot$"
             for d in all_data
         ]
 
@@ -186,7 +228,7 @@ class MultiPlotter:
         plt.figure(figsize=(6, 6))
         for i, data in enumerate(all_data):
             plt.plot(
-                data["t_clip"][2:],  # Skip first 2 elements to avoid solver warm-up anomaly
+                data["t_clip"][2:], 
                 data["a_clip"][2:] / AU,
                 color=colors[i],
                 label=labels[i],
@@ -196,6 +238,7 @@ class MultiPlotter:
             "t_a_comparison",
             xlabel=r"$t$ [s]",
             ylabel=r"$a$ [AU]",
+            xlim=(0, t_max_valid),
         )
 
         plt.figure(figsize=(6, 6))
@@ -211,39 +254,8 @@ class MultiPlotter:
             "t_e_comparison",
             xlabel=r"$t$ [s]",
             ylabel=r"$e$",
+            xlim=(0, t_max_valid),
         )
-
-        # Commented out: m1 and m2 comparison plots
-        # plt.figure(figsize=(6, 6))
-        # for i, data in enumerate(all_data):
-        #     plt.plot(
-        #         data["t_clip"][2:],
-        #         data["m1_clip"][2:],
-        #         color=colors[i],
-        #         label=labels[i],
-        #         alpha=0.8,
-        #     )
-        # self.saveplot(
-        #     "t_m1_comparison",
-        #     xlabel=r"$t$ [s]",
-        #     ylabel=r"$M_1$ [kg]",
-        # )
-
-        # plt.figure(figsize=(6, 6))
-        # for i, data in enumerate(all_data):
-        #     plt.plot(
-        #         data["t_clip"][2:],
-        #         data["m2_clip"][2:],
-        #         color=colors[i],
-        #         label=labels[i],
-        #         alpha=0.8,
-        #     )
-        # self.saveplot(
-        #     "t_m2_comparison",
-        #     xlabel=r"$t$ [s]",
-        #     ylabel=r"$M_2$ [kg]",
-        # )
-
 
         print("Computing E, L, P for all datasets...")
         for data in all_data:
@@ -261,55 +273,6 @@ class MultiPlotter:
         )
 
         if has_derived:
-            # Commented out: delta_E, delta_L, delta_P plots
-            # plt.figure(figsize=(6, 6))
-            # for i, data in enumerate(all_data):
-            #     if "delta_E" in data:
-            #         plt.plot(
-            #             data["t_valid_clip"][2:],
-            #             data["delta_E"][2:],
-            #             color=colors[i],
-            #             label=labels[i],
-            #             alpha=0.8,
-            #         )
-            # self.saveplot(
-            #     "t_E_comparison",
-            #     xlabel=r"$t$ [s]",
-            #     ylabel=r"$\Delta E$ [J]",
-            # )
-
-            # plt.figure(figsize=(6, 6))
-            # for i, data in enumerate(all_data):
-            #     if "delta_L" in data:
-            #         plt.plot(
-            #             data["t_valid_clip"][2:],
-            #             data["delta_L"][2:],
-            #             color=colors[i],
-            #             label=labels[i],
-            #             alpha=0.8,
-            #         )
-            # self.saveplot(
-            #     "t_L_comparison",
-            #     xlabel=r"$t$ [s]",
-            #     ylabel=r"$\Delta L$ [kg$\cdot$m$^2$/s]",
-            # )
-
-            # plt.figure(figsize=(6, 6))
-            # for i, data in enumerate(all_data):
-            #     if "delta_P" in data:
-            #         plt.plot(
-            #             data["t_valid_clip"][2:],
-            #             data["delta_P"][2:],
-            #             color=colors[i],
-            #             label=labels[i],
-            #             alpha=0.8,
-            #         )
-            # self.saveplot(
-            #     "t_P_comparison",
-            #     xlabel=r"$t$ [s]",
-            #     ylabel=r"$\Delta P$ [s]",
-            # )
-
             plt.figure(figsize=(6, 6))
             for i, data in enumerate(all_data):
                 if "dEdt" in data:
@@ -324,6 +287,7 @@ class MultiPlotter:
                 "t_dEdt_comparison",
                 xlabel=r"$t$ [s]",
                 ylabel=r"$-dE/dt$ [W]",
+                xlim=(0, t_max_valid),
             )
 
             plt.figure(figsize=(6, 6))
@@ -340,6 +304,7 @@ class MultiPlotter:
                 "t_dLdt_comparison",
                 xlabel=r"$t$ [s]",
                 ylabel=r"$-dL/dt$ [kg$\cdot$m$^2$/s$^2$]",
+                xlim=(0, t_max_valid),
             )
 
             plt.figure(figsize=(6, 6))
@@ -356,6 +321,7 @@ class MultiPlotter:
                 "t_dPdt_comparison",
                 xlabel=r"$t$ [s]",
                 ylabel=r"$dP/dt$ [s/s]",
+                xlim=(0, t_max_valid),
             )
 
         print(f"Multi-comparison plots saved to {self.output_dir}/")

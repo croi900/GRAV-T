@@ -32,11 +32,21 @@ def compute_phi_r_ode(t, a, e, M):
     """
     print("Computing orbital phase evolution...")
 
+
     a_func = interp1d(t, a, kind="linear", fill_value="extrapolate")
     e_func = interp1d(t, e, kind="linear", fill_value="extrapolate")
     M_func = interp1d(t, M, kind="linear", fill_value="extrapolate")
 
+    padding = (t[-1] - t[0]) * 0.01
+    pbar = tqdm(total=t[-1] - t[0] + padding, desc="  Phase integration", unit="s", leave=False)
+    last_t = np.array([t[0]])
+
     def dphi_dt_func(t_val, y):
+        # Update progress bar
+        if t_val > last_t[0]:
+            pbar.update(t_val - last_t[0])
+            last_t[0] = t_val
+
         phi = y[0]
         a_val = float(a_func(t_val))
         e_val = float(e_func(t_val))
@@ -57,6 +67,8 @@ def compute_phi_r_ode(t, a, e, M):
         method="RK45",
         max_step=(t[-1] - t[0]) / len(t) * 10,
     )
+    
+    pbar.close()
 
     phi_arr = sol.y[0]
 

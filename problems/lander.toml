@@ -3,7 +3,7 @@
 decay_rate = 1.0 # acts as 'nu' in the Lander model
 M1 = 1.4
 M2 = 1.4
-a = 20e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)
+a = 2e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)
 e = 0.2                     # Moderate eccentricity for stability
 
 output_points = 10000000

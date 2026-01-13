@@ -49,7 +49,7 @@ if __name__ == "__main__":
     multi_plotter = MultiPlotter(config)
     # for i, k in enumerate(np.array([1, 10, 20, 30])): # FOR EXPONENTIAL
     for i, k in enumerate(np.array([1, 100, 200, 300])): # FOR LINEAR
-    # for i, k in enumerate(np.array([1])): # FOR LANDER
+    # for i, k in enumerate(np.array([0.9, 1, 1.1, 1.2])): # FOR LANDER
         config.state.decay_rate = k * initial_decay_rate
 
         cotime, _ = BinarySystemModelFast(config).coalescence_time(

@@ -4,7 +4,7 @@
 # Compact orbit for reasonable coalescence time
 #dr 1e-17 GOOD!
 
-decay_rate = 1e-17
+decay_rate = 2e-17
 M1 = 1.4
 M2 = 1.4
 a = 10e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)

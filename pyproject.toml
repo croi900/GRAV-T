@@ -16,6 +16,7 @@ dependencies = [
     "joblib>=1.5.2",
     "matplotlib>=3.9.4",
     "numba>=0.60.0",
+    "numbaquadpack",
     "opencv-python>=4.12.0.88",
     "opencv-python-headless>=4.12.0.88",
     "pandas>=2.3.3",
@@ -28,3 +29,6 @@ dependencies = [
     "tqdm>=4.66.5",
     "wgpu>=0.28.1",
 ]
+
+[tool.uv.sources]
+numbaquadpack = { git = "https://github.com/croi900/NumbaQuadpack" }
