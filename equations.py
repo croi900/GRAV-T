@@ -15,6 +15,26 @@ G = constants.G
 c = constants.c
 
 
+def isco(m1: float, m2: float) -> float:
+    """
+    Calculate the ISCO (Innermost Stable Circular Orbit) radius for a binary system.
+    
+    For a Schwarzschild black hole, the ISCO is at r = 6 * G * M / c^2.
+    For a binary system, we use the total mass M = m1 + m2.
+    
+    As masses decay, the ISCO shrinks proportionally.
+    
+    Args:
+        m1: Mass of first body (kg)
+        m2: Mass of second body (kg)
+        
+    Returns:
+        ISCO radius in meters
+    """
+    M_total = m1 + m2
+    return 6.0 * G * M_total / (c ** 2)
+
+
 FloatFunc = Callable[[float], float]
 
 
@@ -609,7 +629,14 @@ class BinarySystemModelFast:
 
         def event_merger(t, y):
             a, e = y
-            return a - a_min
+            # Calculate current masses at time t
+            f1 = self.mass_fun_1.value(t)
+            f2 = self.mass_fun_2.value(t)
+            m1_current = self.M_c1 * f1
+            m2_current = self.M_c2 * f2
+            # Calculate dynamic ISCO based on current masses
+            r_isco = isco(m1_current, m2_current)
+            return a - r_isco
 
         event_merger.terminal = True
         event_merger.direction = -1
@@ -648,6 +675,7 @@ class BinarySystemModelFast:
 __all__ = [
     "AnalyticMassFunction",
     "BinarySystemModelFast",
+    "isco",
     "make_exp_mass_function",
     "make_linear_mass_function",
     "make_lander_mass_function",
