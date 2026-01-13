@@ -61,14 +61,7 @@ class MultiPlotter:
     def _compute_derived_quantities(
         self, data: dict, t_valid: np.ndarray, a_valid: np.ndarray, e_valid: np.ndarray
     ) -> dict:
-        # Update config with the correct decay rate for this run
-        old_decay_rate = self.config.state.decay_rate
-        self.config.state.decay_rate = data["actual_decay_rate"]
-        
         system = BinarySystemModelFast(self.config)
-        
-        # Restore decat rate
-        self.config.state.decay_rate = old_decay_rate
 
         n_points = len(t_valid)
         dEdt = np.zeros(n_points)
@@ -164,13 +157,12 @@ class MultiPlotter:
                 data["m2_valid"] = data["m2"][valid_mask]
 
                 all_data.append(data)
-                print(f"DEBUG: Loaded {run_name}: t={len(data['t'])}, t_valid={len(data['t_valid'])}")
-                if np.isnan(data['a']).any() or np.isnan(data['e']).any():
-                    print(f"WARNING: NaNs detected in {run_name}!")
-                    print(f"  a nans: {np.isnan(data['a']).sum()}")
-                    print(f"  e nans: {np.isnan(data['e']).sum()}")
 
         t_max = min(data["t"][-1] for data in all_data if len(data["t"]) > 0)
+        t_max_valid = min(
+            data["t_valid"][-1] for data in all_data if len(data["t_valid"]) > 0
+        )
+
         for data in all_data:
             clip_mask = data["t"] <= t_max
             data["t_clip"] = data["t"][clip_mask]
@@ -178,16 +170,15 @@ class MultiPlotter:
             data["m1_clip"] = data["m1"][clip_mask]
             data["m2_clip"] = data["m2"][clip_mask]
 
-            # Do not clip valid data based on other datasets' failure
-            data["t_valid_clip"] = data["t_valid"]
-            data["a_valid_clip"] = data["a_valid"]
-            data["e_valid_clip"] = data["e_valid"]
-            data["m1_valid_clip"] = data["m1_valid"]
-            data["m2_valid_clip"] = data["m2_valid"]
-            print(f"DEBUG: Clipped data for one run: t_clip={len(data['t_clip'])}, t_valid_clip={len(data['t_valid_clip'])}")
+            clip_mask_valid = data["t_valid"] <= t_max_valid
+            data["t_valid_clip"] = data["t_valid"][clip_mask_valid]
+            data["a_valid_clip"] = data["a_valid"][clip_mask_valid]
+            data["e_valid_clip"] = data["e_valid"][clip_mask_valid]
+            data["m1_valid_clip"] = data["m1_valid"][clip_mask_valid]
+            data["m2_valid_clip"] = data["m2_valid"][clip_mask_valid]
 
         labels = [
-            rf"${r'\omega' if self.config.decay_type == 'exponential' else 'k'} = {f'{d['actual_decay_rate']:.2e}'.split('e')[0]} \times 10^{{{int(f'{d['actual_decay_rate']:.2e}'.split('e')[1])}}}$"
+            rf"${'\omega' if self.config.decay_type == 'exponential' else 'k'} = {f'{d["actual_decay_rate"]:.2e}'.split('e')[0]} \times 10^{{{int(f'{d["actual_decay_rate"]:.2e}'.split('e')[1])}}}$"
             for d in all_data
         ]
 

@@ -3,10 +3,10 @@
 # Compact orbit for reasonable coalescence time
 #dr 1e-17 GOOD!
 
-decay_rate = 1e-18
+decay_rate = 1e-15
 M1 = 1.4
 M2 = 1.4
-a = 20e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)
+a = 3.5e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)
 e = 0.2                     # Moderate eccentricity for stability
 
 output_points = 10000000
