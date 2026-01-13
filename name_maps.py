@@ -10,7 +10,9 @@ from equations import (
     ExpMassDecay,
     make_linear_mass_function,
     make_exp_mass_function,
+    make_lander_mass_function,
 )
+from lander import compute_derivs_lander
 
 
 def integrator_map(name):
@@ -38,6 +40,8 @@ def system_map(name):
         return compute_derivs_linear
     if name == "exponential":
         return compute_derivs_exp
+    if name == "lander":
+        return compute_derivs_lander
     raise ValueError(f"Unknown system type: {name}")
 
 
@@ -46,4 +50,6 @@ def decay_map(name, decay_rate):
         return partial(make_linear_mass_function, decay_rate)()
     if name == "exponential":
         return partial(make_exp_mass_function, decay_rate)()
+    if name == "lander":
+        return partial(make_lander_mass_function, decay_rate)()
     raise ValueError(f"Unknown decay type: {name}")

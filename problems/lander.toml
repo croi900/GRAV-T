@@ -1,0 +1,28 @@
+# Parameters for Lander mass loss model test
+
+decay_rate = 1.0 # acts as 'nu' in the Lander model
+M1 = 1.4
+M2 = 1.4
+a = 20e-4                    # 0.0001 AU ≈ 15,000 km (compact orbit)
+e = 0.2                     # Moderate eccentricity for stability
+
+output_points = 10000000
+use_cotime = false 
+cotime_a_min = 3e4
+cotime_max_time = 1e30
+observer_distance_mpc = 10
+
+method = "Radau"
+decay_type = "lander"
+initial_points_exponent = 0
+exponent_offset = 12
+merger_focus = false # Just test the model dynamics
+merger_seconds = 5.0
+
+width = 960
+height = 540
+fps = 60
+tail_length = 200
+star_scale = 5.0
+memory_gb = 10.0
+stride = 1000
