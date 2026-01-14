@@ -238,7 +238,6 @@ class MultiPlotterMass:
             "t_a_comparison",
             xlabel=r"$t$ [s]",
             ylabel=r"$a$ [AU]",
-            xlim=(0, t_max_valid),
         )
 
         plt.figure(figsize=(6, 6))
