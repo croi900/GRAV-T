@@ -1,18 +1,3 @@
-"""
-Gravitational Wave Polarization Module
-
-Computes h₊ and h× using the quadrupole formula with analytical time derivatives.
-
-The key formulas from Mathematica derivation:
-- r[φ] = a*(1 - e²)/(1 + e*cos(φ))
-- φ̇ = sqrt(G*M*a*(1 - e²))/r²
-- φ̈ = -2*e*sin(φ)*G*M*(1 + e*cos(φ))³/(a³*(1 - e²)³)
-- d²Q/dt² = (d²Q/dφ²)*φ̇² + (dQ/dφ)*φ̈
-
-For variable a(t), e(t), M(t), we use the instantaneous values at each time step.
-The amplitude INCREASES during inspiral because φ̇ ∝ a^(-3/2), so as a decreases,
-the time derivatives grow even though the quadrupole moment itself shrinks.
-"""
 
 import numpy as np
 from numba import njit, prange
@@ -20,18 +5,10 @@ from scipy.integrate import solve_ivp
 from scipy.interpolate import interp1d
 from tqdm.auto import tqdm
 
-G = 6.674e-11
-c = 2.998e8
+from constants import G, c
 
 
 def compute_phi_r_ode(t, a, e, M):
-    """
-    Compute the orbital phase φ(t) and radius r(t) by integrating dφ/dt.
-
-    Uses the variable a(t), e(t), M(t) from the integration data.
-    """
-    print("Computing orbital phase evolution...")
-
 
     a_func = interp1d(t, a, kind="linear", fill_value="extrapolate")
     e_func = interp1d(t, e, kind="linear", fill_value="extrapolate")
@@ -42,7 +19,6 @@ def compute_phi_r_ode(t, a, e, M):
     last_t = np.array([t[0]])
 
     def dphi_dt_func(t_val, y):
-        # Update progress bar
         if t_val > last_t[0]:
             pbar.update(t_val - last_t[0])
             last_t[0] = t_val
@@ -83,11 +59,6 @@ def compute_phi_r_ode(t, a, e, M):
 
 @njit(cache=True)
 def _compute_waveform_point(phi, a, e, G_val, M, mu):
-    """
-    Compute h₊ and h× components for a single point using analytical derivatives.
-
-    Returns ddQxx - ddQyy and 2*ddQxy (the components before the G/(c⁴D) factor).
-    """
 
     e_safe = max(min(e, 0.9999), 1e-10)
 
@@ -161,24 +132,7 @@ def _compute_waveforms_parallel(phi, a, e, M, mu, n_points):
 
 def get_waveforms(phi, a, e, M, mu, D_obs, clight=2.998e8):
     """
-    Compute gravitational wave strains h₊ and h× using analytical derivatives.
-
-    This uses the formula: d²Q/dt² = (d²Q/dφ²)*φ̇² + (dQ/dφ)*φ̈
-
-    The amplitude INCREASES during inspiral because φ̇ ∝ a^(-3/2).
-
-    Parameters:
-    -----------
-    phi : array - orbital phase
-    a : array - semi-major axis (m)
-    e : array - eccentricity
-    M : array - total mass (kg)
-    mu : array - reduced mass (kg)
-    D_obs : float - observer distance (m)
-
-    Returns:
-    --------
-    h_plus, h_cross : arrays of strain values
+    Compute gravitational wave strains h+ and hx using analytical derivatives.
     """
 
     phi = np.atleast_1d(phi).astype(np.float64)
@@ -203,10 +157,6 @@ def get_waveforms(phi, a, e, M, mu, D_obs, clight=2.998e8):
     )
 
     return h_plus, h_cross
-
-
-def get_waveforms_full(phi, a, e, M, mu, t, D_obs):
-    return get_waveforms(phi, a, e, M, mu, D_obs)
 
 
 def get_r(phi, a, e):

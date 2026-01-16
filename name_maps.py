@@ -1,8 +1,7 @@
 from functools import partial
 
-from numbergen import ExponentialDecay
-from scipy.integrate import *
-from domain_gen import *
+from scipy.integrate import RK45, Radau, DOP853, LSODA
+from domain_gen import uniform_domain, exponential_domain
 from equations import (
     compute_derivs_linear,
     compute_derivs_exp,
@@ -13,6 +12,7 @@ from equations import (
     make_lander_mass_function,
 )
 from lander import compute_derivs_lander
+from hydrodynamics import compute_derivs_hydro, make_hydro_mass_function
 
 
 def integrator_map(name):
@@ -42,6 +42,8 @@ def system_map(name):
         return compute_derivs_exp
     if name == "lander":
         return compute_derivs_lander
+    if name == "hydrodynamics":
+        return compute_derivs_hydro
     raise ValueError(f"Unknown system type: {name}")
 
 
@@ -52,4 +54,8 @@ def decay_map(name, decay_rate):
         return partial(make_exp_mass_function, decay_rate)()
     if name == "lander":
         return partial(make_lander_mass_function, decay_rate)()
+    if name == "hydrodynamics":
+        # For hydrodynamics, decay_rate is interpreted as M_dot
+        # M_initial needs to be set separately (defaults to 1.0)
+        return partial(make_hydro_mass_function, decay_rate, 1.0)()
     raise ValueError(f"Unknown decay type: {name}")

@@ -1,43 +1,27 @@
 import copy
 import os
-import time
-import threading
-import queue
-from pathlib import Path
-from typing import Dict, Any, Optional
-import numpy as np
-import h5py
-from scipy import constants
-from scipy.integrate import RK45, Radau, DOP853, LSODA
-from scipy.ndimage import gaussian_filter1d
-from tqdm.auto import tqdm
-
-import domain_gen
-from ode_plotter import ODEPlotter
-from config import Config
-from equations import *
-import tomli as tomllib
 import argparse
 
-from multi_plotter import MultiPlotter
+import numpy as np
 
+import domain_gen
+from config import Config
+from equations import BinarySystemModelFast
 from integration_run import IntegrationRun
-from name_maps import domain_type_map
-from orbit_plotter import OrbitPlotter
 from polarization_plotter import PolarizationPlotter
 
 
 def parse_args():
-    args = argparse.ArgumentParser()
-    args.add_argument("--problem", type=str, help="Problem file TOML")
-    return args.parse_args()
+    parser = argparse.ArgumentParser(description="GRAV-T Gravitational Wave Simulation")
+    parser.add_argument("--problem", type=str, required=True, help="Problem file TOML")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
 
-    if not args.problem or not args.problem.endswith(".toml"):
-        print("Problem file be a TOML file / Unspecified problem")
+    if not args.problem.endswith(".toml"):
+        print("Error: Problem file must be a TOML file")
         exit(1)
 
     config = Config(args.problem)
@@ -53,7 +37,7 @@ if __name__ == "__main__":
         method=config.method,
     )
 
-    print("COALESCENCE TIME: {:5e}".format(cotime))
+    print(f"Coalescence time: {cotime:.5e} s")
 
     if config.initial_points_exponent > 0:
         t_eval = domain_gen.exponential_domain(
@@ -88,7 +72,7 @@ if __name__ == "__main__":
             f"Merger sampling: {config.output_points} points over {merger_window}s (2x margin)"
         )
         print(
-            f"  → Resolution: {merger_window / config.output_points * 1e6:.2f} μs per point"
+            f"  Resolution: {merger_window / config.output_points * 1e6:.2f} μs per point"
         )
 
     merger = IntegrationRun(
@@ -102,12 +86,6 @@ if __name__ == "__main__":
     )
 
     merger.run()
-    # plotter = MultiPlotter(config)
-    # plotter.plot("circularization")
 
     plotter = PolarizationPlotter(config)
     plotter.plot("merger")
-
-    # plotter = OrbitPlotter(config)
-
-    #

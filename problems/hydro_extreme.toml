@@ -1,0 +1,42 @@
+# Extreme hydrodynamic mass transfer - STRONG effects
+# Parameters chosen to show visible mass and orbital evolution differences
+
+M1 = 1.4              # Donor mass (solar masses)
+M2 = 1.4              # Accretor mass (solar masses)
+a = 2e-4              # Orbital separation (AU) - ~15,000 km
+e = 0.0               # Circular orbit
+
+# too large a (2.5e-4 up) the orbit doesn't decay
+
+decay_rate = 0.0
+decay_type = "hydrodynamics"
+
+output_points = 10000000
+use_cotime = true
+cotime_a_min = 3e3
+cotime_max_time = 1e20
+method = "Radau"
+initial_points_exponent = 0
+exponent_offset = 12
+merger_focus = true
+merger_seconds = 5.0  
+# polarization can be computed only for small a = 5e-6, but then Gamma effects are not visible
+
+width = 1920
+height = 1080
+fps = 60
+tail_length = 200
+star_scale = 5.0
+memory_gb = 10.0
+stride = 1000
+observer_distance_mpc = 10
+
+# EXTREME mass transfer parameters
+[hydrodynamics]
+R_donor = 0.1         # 0.1 R_sun = ~70,000 km (>> R_L ~ 5700 km, strong overflow)
+T_eff = 100000        # Very hot donor
+L_rad = 1e36          # Very high luminosity 
+rho_ph = 1e5          # EXTREME photosphere density (kg/m^3)
+P_gas_ph = 1e15       # EXTREME pressure (Pa)
+kappa_R = 0.034       # Electron scattering opacity
+Gamma_Edd = 0.1       # Will be overridden by variable_hydro.py

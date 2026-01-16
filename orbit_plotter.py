@@ -11,8 +11,6 @@ from h5utils import create_overwrite_dataset
 from plotter import Plotter
 from polarizations import compute_phi_r_ode
 
-G = 6.67430e-11
-
 
 def polar_to_cartesian(phi, r, m1, m2):
     """

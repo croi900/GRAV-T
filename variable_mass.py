@@ -1,43 +1,30 @@
-import copy
+"""
+Parameter study for mass variations.
+Compares orbital evolution with different stellar masses.
+"""
+
 import os
-import time
-import threading
-import queue
-from pathlib import Path
-from typing import Dict, Any, Optional
+import argparse
 import numpy as np
-import h5py
-from scipy import constants
-from scipy.integrate import RK45, Radau, DOP853, LSODA
-from scipy.ndimage import gaussian_filter1d
-from tqdm.auto import tqdm
 
 import domain_gen
-from ode_plotter import ODEPlotter
-from config import Config
-from equations import *
-import tomli as tomllib
-import argparse
-
+from config import Config, M_SUN
+from equations import BinarySystemModelFast
 from integration_run import IntegrationRun
-from name_maps import domain_type_map
-from orbit_plotter import OrbitPlotter
-from polarization_plotter import PolarizationPlotter
-
 from multi_plotter_mass import MultiPlotterMass
-from config import M_SUN
+
 
 def parse_args():
-    args = argparse.ArgumentParser()
-    args.add_argument("--problem", type=str, help="Problem file TOML")
-    return args.parse_args()
+    parser = argparse.ArgumentParser(description="Mass parameter study")
+    parser.add_argument("--problem", type=str, required=True, help="Problem file TOML")
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
 
-    if not args.problem or not args.problem.endswith(".toml"):
-        print("Problem file be a TOML file / Unspecified problem")
+    if not args.problem.endswith(".toml"):
+        print("Problem file must be a TOML file")
         exit(1)
 
     config = Config(args.problem)
@@ -47,12 +34,14 @@ if __name__ == "__main__":
         os.mkdir(config.name)
 
     multi_plotter = MultiPlotterMass(config)
-  
-
-    for i, k in enumerate(np.array([1.2, 1.4, 1.6, 1.8])):
-        for j, m in enumerate(np.array([1.4])) :
-            config.state.M1 = k * M_SUN 
-            config.state.M2 = m * M_SUN
+    
+    m1_values = np.array([1.2, 1.4, 1.6, 1.8])
+    m2_values = np.array([1.4])
+    
+    for i, m1 in enumerate(m1_values):
+        for j, m2 in enumerate(m2_values):
+            config.state.M1 = m1 * M_SUN 
+            config.state.M2 = m2 * M_SUN
 
             cotime, _ = BinarySystemModelFast(config).coalescence_time(
                 config.cotime_a_min,
@@ -62,27 +51,26 @@ if __name__ == "__main__":
                 method=config.method,
             )
 
-            print("COALESCENCE TIME: {:5e}".format(cotime))
-            print(f"COMPUTING FOR: {k}")
+            print(f"COALESCENCE TIME: {cotime:.5e}")
+            print(f"COMPUTING FOR: M1={m1}, M2={m2}")
+            
             if config.initial_points_exponent > 0:
                 t_eval = domain_gen.exponential_domain(
                     0, cotime, 2, config.exponent_offset, config.initial_points_exponent
                 )
             else:
-                t_eval = domain_gen.uniform_domain(
-                    0, cotime * 1.01, int(config.output_points)
-                )
+                t_eval = domain_gen.uniform_domain(0, cotime * 1.01, config.output_points)
 
-            circularization = IntegrationRun(
-                f"k_{i}_m_{j}_circ_{k}_{m}",
+            run = IntegrationRun(
+                f"m1_{i}_m2_{j}_{m1}_{m2}",
                 config,
                 0,
                 cotime - config.merger_seconds,
                 decay_type=config.decay_type,
                 solver=config.method,
             )
-            circularization.run()
+            run.run()
 
-            multi_plotter.add_dataset(f"k_{i}_m_{j}_circ_{k}_{m}", k, m)
+            multi_plotter.add_dataset(f"m1_{i}_m2_{j}_{m1}_{m2}", m1, m2)
 
     multi_plotter.generate_plots()

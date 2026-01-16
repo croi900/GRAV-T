@@ -35,17 +35,40 @@ class IntegrationRun:
             self.t_eval = t_eval
 
         self.decay_function = decay_map(decay_type, self.state.decay_rate)
+        self.is_hydro = (decay_type == "hydrodynamics")
+        
+        # Set hydro params if using hydrodynamics decay type
+        if self.is_hydro:
+            from hydrodynamics import set_hydro_params
+            set_hydro_params(
+                R_donor=config.hydro.R_donor,
+                rho_ph=config.hydro.rho_ph,
+                P_gas_ph=config.hydro.P_gas_ph,
+                L_rad=config.hydro.L_rad,
+                M_donor=self.state.M1,
+                kappa_R=config.hydro.kappa_R,
+                Gamma_Edd_fixed=config.hydro.Gamma_Edd,
+                M2=self.state.M2,
+            )
+        
         self.system = lambda t, y: system_map(decay_type)(
             t, y, self.state.M1, self.state.M2, self.state.decay_rate
         )
         self.t0 = t0
         self.t1 = t1
         self.writer = h5py.File(f"{self.config.name}/{self.config.name}.h5", "a")
+        
+        # Use 3-variable state [a, e, M1] for hydrodynamics
+        if self.is_hydro:
+            y0 = [self.state.a, self.state.e, self.state.M1]
+        else:
+            y0 = [self.state.a, self.state.e]
+        
         self.solver = integrator_map(solver)(
             fun=self.system,
             t0=self.t0,
             t_bound=self.t1,
-            y0=[self.state.a, self.state.e],
+            y0=y0,
             rtol=1e-9,
             atol=1e-12,
             dense_output=True,
@@ -161,12 +184,18 @@ class IntegrationRun:
                         t_buffer[buffer_ptr] = t_target
                         a_buffer[buffer_ptr] = istate[0]
                         e_buffer[buffer_ptr] = istate[1]
-                        m1_buffer[buffer_ptr] = (
-                            self.state.M1 * self.decay_function.value(t_target)
-                        )
-                        m2_buffer[buffer_ptr] = (
-                            self.state.M2 * self.decay_function.value(t_target)
-                        )
+                        
+                        # For hydrodynamics, use evolved M1 from state; M2 constant
+                        if self.is_hydro and len(istate) >= 3:
+                            m1_buffer[buffer_ptr] = istate[2]
+                            m2_buffer[buffer_ptr] = self.state.M2  # Accretor constant
+                        else:
+                            m1_buffer[buffer_ptr] = (
+                                self.state.M1 * self.decay_function.value(t_target)
+                            )
+                            m2_buffer[buffer_ptr] = (
+                                self.state.M2 * self.decay_function.value(t_target)
+                            )
                         pbar.update(1)
 
                         t_eval_ptr += 1

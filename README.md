@@ -13,11 +13,11 @@ This project numerically integrates the orbital evolution of compact binary syst
 - **Quadrupole Radiation**: Analytical gravitational wave polarization computation using the quadrupole formula
 - **Coalescence Time Estimation**: Automatic detection of merger events based on semi-major axis evolution
 - **HDF5 Output**: Efficient chunked storage with gzip compression for large datasets
-- **Visualization Suite**: Orbital phase plots, waveform animations, and polarization ellipse diagrams
+- **Visualization**: Orbital phase plots, waveform animations, and polarization ellipse diagrams
 
 ## Installation
 
-Requires Python 3.11+. Install dependencies using `uv`:
+Requires Python 3.13+. Install dependencies using `uv`:
 
 ```bash
 uv sync

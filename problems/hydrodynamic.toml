@@ -1,0 +1,44 @@
+# Full hydrodynamic mass transfer simulation
+# R_donor > R_L (Roche lobe overflow case)
+
+# Binary masses (solar masses)
+M1 = 1.4              # Donor mass
+M2 = 1.4              # Accretor mass
+a = 2e-4              # very compact
+e = 0.0               # Circular orbit
+
+decay_rate = 0.0      # Not used for hydrodynamics (computed dynamically)
+decay_type = "hydrodynamics"
+
+# Integration settings
+output_points = 10000
+use_cotime = true
+cotime_a_min = 3e3
+cotime_max_time = 1e12
+method = "Radau"
+initial_points_exponent = 0
+exponent_offset = 12
+merger_focus = true
+merger_seconds = 5.0
+
+# Rendering
+width = 1920
+height = 1080
+fps = 60
+tail_length = 200
+star_scale = 5.0
+memory_gb = 10.0
+stride = 1000
+observer_distance_mpc = 10
+
+# Hydrodynamics - donor OVERFLOWING Roche lobe
+# At a = 1e-4 AU = 15000 km, R_L ~ 0.38 * 15000 = 5700 km
+# So R_donor = 0.1 R_sun = 6957 km > R_L (RLOF case!)
+[hydrodynamics]
+R_donor = 0.1         # Donor radius (solar radii) - 6957 km
+T_eff = 50000         # Effective temperature (K)
+L_rad = 1e31          # Radiative luminosity (W)
+rho_ph = 1e-4         # Photosphere density (kg/m³) - higher for more mass transfer
+P_gas_ph = 1e6        # Photosphere gas pressure (Pa) - higher pressure
+kappa_R = 0.034       # Rosseland mean opacity (m²/kg)
+Gamma_Edd = 0.5       # Eddington factor (halfway to limit)

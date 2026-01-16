@@ -4,13 +4,9 @@ import numpy as np
 from numba import njit, cfunc
 from NumbaQuadpack import dqags, quadpack_sig
 
-# Solar mass in kg (approx)
-M_SUN_KG = 1.9891e30
+from constants import M_SUN
 
-# =============================================================================
 # JIT-compiled helper functions for Lander mass decay model
-# These are the core performance-critical functions that get called many times
-# =============================================================================
 
 @njit(cache=True)
 def _L_nu(t: float) -> float:
@@ -71,7 +67,6 @@ def _f_dot_cfunc(t, data):
     return _f_dot_val(t)
 
 
-# Get the function address at module level (python time) so it can be used in JIT
 FUNC_PTR = _f_dot_cfunc.address
 
 
@@ -83,7 +78,6 @@ def _integrate_f_dot(t: float) -> float:
     if t <= 0:
         return 0.0
     
-    # Use the pre-computed address
     sol, _, _ = dqags(FUNC_PTR, 0.0, t, epsabs=1e-9, epsrel=1e-9)
     return sol
 
@@ -194,10 +188,6 @@ def _eval_lander_mass(t: float, mass_coef: float):
     return f, df, d2f, d3f
 
 
-# =============================================================================
-# Class-based API for backward compatibility
-# =============================================================================
-
 class LanderMassDecay:
     """
     Lander mass decay model.
@@ -219,26 +209,19 @@ class LanderMassDecay:
         return _f_third(t)
 
 
-# =============================================================================
 # compute_derivs_lander - uses late import to avoid circular dependency
 # This function is NOT @njit because it needs to import from equations.py
 # However, the mass evaluation (_eval_lander_mass) IS JIT-compiled, which is
 # where most of the computation time was being spent (scipy.quad calls)
-# =============================================================================
 
 def compute_derivs_lander(t, y, M_c1, M_c2, mass_coef):
     """
     Derivative computation for Lander mass decay model.
-    
-    Note: This function is NOT JIT-compiled because it imports from equations.py
-    which has a circular dependency. However, _eval_lander_mass IS JIT-compiled,
-    which eliminates the scipy.quad bottleneck.
     """
     from equations import _combine_scalings, _dadt, _dedt
     
     a = y[0]
     e = min(max(y[1], 0.0), 1.0 - 1e-8)
-    # M_c1 *= mass_coef
     M_c = M_c1 + M_c2
 
     f1, df1, d2f1, d3f1 = _eval_lander_mass(t, mass_coef)
@@ -272,7 +255,6 @@ def compute_derivs_lander(t, y, M_c1, M_c2, mass_coef):
     return np.array([dadt_val, dedt_val], dtype=np.float64)
 
 
-# Late import for AnalyticMassFunction to avoid circular dependency
 def make_lander_mass_function(mass_coef: float):
     from equations import AnalyticMassFunction
     decay = LanderMassDecay(mass_coef)

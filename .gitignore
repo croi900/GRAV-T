@@ -1,0 +1,7 @@
+
+# Output data folders (large HDF5 files)
+exponential_better/
+hydro_extreme/
+lander/
+linear_better/
+*.h5

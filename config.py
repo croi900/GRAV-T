@@ -1,42 +1,24 @@
-"""
-EXAMPLE TOML CONFIG
-
-decay_rate = 1e-20
-M1 = 1.4
-M2 = 1.4
-a = 1
-e = 0.8
-
-[integration]
-output_points = 10000000
-use_cotime = true
-cotime_a_min = 1e1
-cotime_max_time = 1e30
-method = "Radau"
-decay_type = "exponential"
-initial_points_exponent = 0
-exponent_offset = 12
-merger_focus = true
-merger_seconds = 5.0
-
-[rendering]
-width = 1920
-height = 1080
-fps = 60
-tail_length = 200
-star_scale = 5.0
-memory_gb = 10.0
-stride = 1000
-"""
+"""Configuration classes for GRAV-T simulations."""
 
 import copy
 
 from name_maps import *
 import tomli
 from dataclasses import dataclass, field
-from scipy.constants import astronomical_unit as AU
 
-M_SUN = 1.98847e30
+from constants import M_SUN, AU, MPC
+
+
+@dataclass
+class HydrodynamicsParams:
+    """Donor stellar properties for hydrodynamic mass transfer (arXiv:2505.10616v2)."""
+    R_donor: float = 1e7           # Donor radius (m)
+    T_eff: float = 40000.0         # Effective temperature (K)
+    L_rad: float = 1e32            # Radiative luminosity (W)
+    rho_ph: float = 1e-6           # Photosphere density (kg/m³)
+    P_gas_ph: float = 1e4          # Photosphere gas pressure (Pa)
+    kappa_R: float = 0.034         # Rosseland mean opacity (m²/kg)
+    Gamma_Edd: float = 0.0         # Fixed Eddington factor (0 = compute from L_rad)
 
 
 @dataclass
@@ -57,10 +39,7 @@ class State:
 
     @classmethod
     def from_si(cls, M1_kg, M2_kg, a_m, e, decay):
-        """
-        Construct a State when the inputs are already in SI units.
-        Avoids the solar-mass / AU scaling done in __init__.
-        """
+        """Construct a State from SI units (bypasses M_SUN/AU scaling)."""
         obj = cls.__new__(cls)
         obj.M1 = M1_kg
         obj.M2 = M2_kg
@@ -70,14 +49,13 @@ class State:
         return obj
 
     def __deepcopy__(self, memo):
-        new_instance = self.__class__(
-            copy.deepcopy(self.M1, memo),
-            copy.deepcopy(self.M2, memo),
-            copy.deepcopy(self.a, memo),
-            copy.deepcopy(self.e, memo),
-            copy.deepcopy(self.decay_rate, memo),
-            copy.deepcopy(self.decay_type, memo),
-        )
+        new_instance = self.__class__.__new__(self.__class__)
+        new_instance.M1 = self.M1
+        new_instance.M2 = self.M2
+        new_instance.a = self.a
+        new_instance.e = self.e
+        new_instance.decay_rate = self.decay_rate
+        new_instance.decay_type = self.decay_type
         memo[id(self)] = new_instance
         return new_instance
 
@@ -103,6 +81,7 @@ class Config:
     tail_length: int = field(init=False)
     star_scale: float = field(init=False)
     memory_gb: float = field(init=False)
+    hydro: HydrodynamicsParams = field(init=False)
 
     def __init__(self, toml_file):
         file = tomli.load(open(toml_file, "rb"))
@@ -133,15 +112,27 @@ class Config:
         self.tail_length = file["tail_length"]
         self.star_scale = file["star_scale"]
         self.memory_gb = file["memory_gb"]
-
-        MPC = 3.086e22
         self.observer_distance = file.get("observer_distance_mpc", 10) * MPC
+
+        # Parse hydrodynamics section if present
+        hydro_section = file.get("hydrodynamics", {})
+        R_SUN = 6.957e8  # Solar radius in meters
+        self.hydro = HydrodynamicsParams(
+            R_donor=hydro_section.get("R_donor", 0.01) * R_SUN,
+            T_eff=hydro_section.get("T_eff", 40000.0),
+            L_rad=hydro_section.get("L_rad", 1e32),
+            rho_ph=hydro_section.get("rho_ph", 1e-6),
+            P_gas_ph=hydro_section.get("P_gas_ph", 1e4),
+            kappa_R=hydro_section.get("kappa_R", 0.034),
+            Gamma_Edd=hydro_section.get("Gamma_Edd", 0.0),
+        )
 
     def __deepcopy__(self, memo):
         new_config = object.__new__(Config)
         memo[id(self)] = new_config
 
         new_config.state = copy.deepcopy(self.state, memo)
+        new_config.hydro = copy.deepcopy(self.hydro, memo)
 
         new_config.name = self.name
         new_config.output_points = self.output_points

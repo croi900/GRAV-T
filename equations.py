@@ -5,32 +5,15 @@ from typing import Callable, Iterable, Sequence, Tuple
 
 import numpy as np
 from numba import njit
-from scipy import constants
 from scipy.integrate import solve_ivp
 from tqdm.auto import tqdm
 
 import config as cfg
-
-G = constants.G
-c = constants.c
+from constants import G, c
 
 
 def isco(m1: float, m2: float) -> float:
-    """
-    Calculate the ISCO (Innermost Stable Circular Orbit) radius for a binary system.
-    
-    For a Schwarzschild black hole, the ISCO is at r = 6 * G * M / c^2.
-    For a binary system, we use the total mass M = m1 + m2.
-    
-    As masses decay, the ISCO shrinks proportionally.
-    
-    Args:
-        m1: Mass of first body (kg)
-        m2: Mass of second body (kg)
-        
-    Returns:
-        ISCO radius in meters
-    """
+    """Calculate ISCO radius for binary: r = 6*G*M/c^2."""
     M_total = m1 + m2
     return 6.0 * G * M_total / (c ** 2)
 

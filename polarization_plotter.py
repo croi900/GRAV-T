@@ -57,20 +57,8 @@ def find_merger_region(t_ds, h_amp, threshold_fraction=0.01):
     """
     Find the merger region where the GW signal becomes interesting.
 
-    Detects where the strain amplitude starts increasing significantly above its
-    baseline. This allows automatic zooming to the interesting part of the waveform
-    even for long simulations like "circularization" that contain the merger.
-
-    IMPORTANT: The merger is defined as the PEAK amplitude. We only include data
+    The merger is defined as the PEAK amplitude. We only include data
     up to the merger, not after it (post-merger data is unphysical in this model).
-
-    Args:
-        t_ds: Array of time values
-        h_amp: Array of strain amplitude values
-        threshold_fraction: Fraction of max amplitude to use as detection threshold
-
-    Returns:
-        (merger_start_idx, merger_peak_idx): Start and end indices of the interesting region
     """
     if len(h_amp) < 10:
         return 0, len(h_amp) - 1
@@ -108,11 +96,6 @@ def find_merger_region(t_ds, h_amp, threshold_fraction=0.01):
 def compute_gw_frequency(hp, hx, t_ds, a=None, M=None):
     """
     Compute instantaneous GW frequency.
-
-    If orbital parameters (a, M) are provided, uses the physically correct formula:
-        f_GW = 2 × f_orbital = (1/π) × sqrt(G×M/a³)
-
-    Otherwise falls back to phase derivative method (less accurate for coarse sampling).
     """
     if a is not None and M is not None:
         f_orbital = (1 / (2 * np.pi)) * np.sqrt(G * M / a**3)
@@ -146,7 +129,8 @@ class PolarizationPlotter(Plotter):
             m1_ds = np.array(f[f"{run_name}/m1"])
             m2_ds = np.array(f[f"{run_name}/m2"])
 
-        valid_mask = e_ds > 0
+        # Filter valid data - include e=0 for circular orbits
+        valid_mask = e_ds >= 0
         a_ds = a_ds[valid_mask]
         t_ds = t_ds[valid_mask]
         m1_ds = m1_ds[valid_mask]
@@ -259,45 +243,11 @@ class PolarizationPlotter(Plotter):
 
         t_before_merger = t_focus - t_focus[-1]
 
-        # Commented out: standard full-range plots
-        # print(f"Creating standard plots...")
-
-        # plt.plot(t_ds, phi_ds)
-        # self.saveplot(
-        #     f"{run_name}/phi_t", xlabel=r"$t$ [s]", ylabel=r"$\phi$ [rad]"
-        # )
-
-        # plt.plot(t_ds, hp)
-        # self.saveplot(f"{run_name}/t_hp", xlabel=r"$t$ [s]", ylabel=r"$h_+$")
-
-        # plt.plot(t_ds, hx)
-        # self.saveplot(f"{run_name}/t_hx", xlabel=r"$t$ [s]", ylabel=r"$h_\times$")
-
-        # plt.plot(t_ds, r_ds / 1e3)
-        # self.saveplot(
-        #     f"{run_name}/t_r", xlabel=r"$t$ [s]", ylabel=r"$r$ [km]"
-        # )
-
-        # plt.plot(t_ds, f_GW)
-        # self.saveplot(f"{run_name}/t_f_GW", xlabel=r"$t$ [s]", ylabel=r"$f_{GW}$ [Hz]")
-
-        # plt.plot(t_ds, h_amp)
-        # self.saveplot(f"{run_name}/t_h_amp", xlabel=r"$t$ [s]", ylabel=r"$|h|$")
-
-        # plt.plot(t_ds, F_GW)
-        # self.saveplot(f"{run_name}/t_F_GW", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]")
-
-        # plt.semilogy(t_ds, np.abs(F_GW) + 1e-100)
-        # self.saveplot(
-        #     f"{run_name}/t_F_GW_log", xlabel=r"$t$ [s]", ylabel=r"$F_{GW}$ [W/m²]"
-        # )
-
 
         # Focused plots for t=-1 to 0 seconds: frequency, strain, hp, hx
         if len(t_focus) > 10:
             print(f"Creating focused plots for t=-1 to 0s ({len(t_focus)} points)...")
 
-            # Create t=-1 to 0 mask
             final_mask = (t_before_merger >= -1) & (t_before_merger <= 0)
             if np.sum(final_mask) > 10:
                 t_final = t_before_merger[final_mask]
@@ -346,19 +296,6 @@ class PolarizationPlotter(Plotter):
                 plt.tight_layout()
                 self.saveplot(f"{run_name}/focus_f_GW")
 
-            # Commented out: focus_combined plot
-            # fig, axes = plt.subplots(3, 1, figsize=(14, 10), sharex=True)
-            # ...
-
-
-        # Commented out: chirp analysis plots
-        # print(f"Creating chirp analysis plots...")
-        # t_chirp_start, t_chirp_end, peak_idx = find_chirp_region(...)
-        # ...
-
-        # Commented out: final window plots (10s, 1s, 0.1s)
-        # for window_sec in [10.0, 1.0, 0.1]:
-        #     ...
 
         print(f"\n--- Summary for {run_name} ---")
         print(f"  Duration: {t_ds[-1] - t_ds[0]:.4e} s")
