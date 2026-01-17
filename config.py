@@ -22,6 +22,7 @@ class HydrodynamicsParams:
     Gamma_Edd: float = 0.0         # Fixed Eddington factor (0 = compute from L_rad)
     mu: float = 0.6                # Mean molecular weight (for isothermal EOS)
     use_full_bvp: bool = False     # Use full BVP solver (Eqs 20) vs simplified formula
+    beta: float = 1.0              # Accretion efficiency (1.0 = fully conservative transfer)
 
 
 @dataclass
@@ -131,6 +132,7 @@ class Config:
             Gamma_Edd=hydro_section.get("Gamma_Edd", 0.0),
             mu=hydro_section.get("mu", 0.6),
             use_full_bvp=hydro_section.get("use_full_bvp", False),
+            beta=hydro_section.get("beta", 1.0),  # Accretion efficiency
         )
 
     def __deepcopy__(self, memo):

@@ -1,8 +1,9 @@
 # Extreme hydrodynamic mass transfer - STRONG effects
 # Parameters chosen to show visible mass and orbital evolution differences
+# M1 < M2 causes orbit to SHRINK during conservative mass transfer
 
-M1 = 1.6              # Donor mass (solar masses)
-M2 = 1.4              # Accretor mass (solar masses)
+M1 = 1.4              # Donor mass (solar masses) - lighter, so q < 1
+M2 = 1.6              # Accretor mass (solar masses) - heavier, gains mass
 a = 2e-4              # Orbital separation (AU) - ~15,000 km
 e = 0.0               # Circular orbit
 
@@ -43,3 +44,4 @@ kappa_R = 0.034       # Electron scattering opacity
 Gamma_Edd = 0.1       # Will be overridden by variable_hydro.py
 mu = 0.6              # Mean molecular weight (fully ionized H/He)
 use_full_bvp = false  # Set to true to use full flow equations (Eqs 20)
+beta = 1.0            # Accretion efficiency: 1.0 = fully conservative (all mass goes to M2)

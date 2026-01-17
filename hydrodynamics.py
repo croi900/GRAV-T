@@ -24,23 +24,30 @@ _HYDRO_CACHE = {
     'rho_ph': 1e-6,
     'P_gas_ph': 1e4,
     'Gamma_Edd': 0.5,
-    'M2': 0.0,  # Accretor mass (constant)
+    'M2_initial': 0.0,  # Initial accretor mass (for scaling)
     'T_ph': 10000.0,  # Photosphere temperature (K)
     'mu': 0.6,  # Mean molecular weight
     'use_full_bvp': False,  # Use full BVP solver
+    'beta': 1.0,  # Accretion efficiency (1.0 = fully conservative)
 }
 
 
 def set_hydro_params(R_donor, rho_ph, P_gas_ph, L_rad, M_donor, kappa_R, 
-                     Gamma_Edd_fixed=0.0, M2=0.0, T_ph=10000.0, mu=0.6, use_full_bvp=False):
-    """Set global hydro parameters before ODE integration."""
+                     Gamma_Edd_fixed=0.0, M2=0.0, T_ph=10000.0, mu=0.6, 
+                     use_full_bvp=False, beta=1.0):
+    """Set global hydro parameters before ODE integration.
+    
+    Args:
+        beta: Accretion efficiency (0-1). 1.0 = fully conservative transfer.
+    """
     _HYDRO_CACHE['R_donor'] = R_donor
     _HYDRO_CACHE['rho_ph'] = rho_ph
     _HYDRO_CACHE['P_gas_ph'] = P_gas_ph
-    _HYDRO_CACHE['M2'] = M2
+    _HYDRO_CACHE['M2_initial'] = M2  # Store initial M2 for scaling
     _HYDRO_CACHE['T_ph'] = T_ph
     _HYDRO_CACHE['mu'] = mu
     _HYDRO_CACHE['use_full_bvp'] = use_full_bvp
+    _HYDRO_CACHE['beta'] = beta  # Accretion efficiency
     
     if Gamma_Edd_fixed > 0:
         _HYDRO_CACHE['Gamma_Edd'] = Gamma_Edd_fixed
@@ -140,10 +147,12 @@ def compute_dynamic_M_dot(a: float, M1: float, M2: float) -> float:
 
 def compute_derivs_hydro(t, y, M_c1, M_c2, hydro_params):
     """
-    ODE derivatives with DYNAMIC Ṁ - evolves [a, e, M1].
+    ODE derivatives with DYNAMIC Ṁ - evolves [a, e, M1, M2].
     
-    State vector y = [a, e, M1] where M1 is the donor mass.
-    M2 (accretor) is stored in _HYDRO_CACHE and assumed constant.
+    Conservative mass transfer: mass lost by M1 is gained by M2.
+    State vector y = [a, e, M1, M2] where:
+        M1 = donor mass (decreasing)
+        M2 = accretor mass (increasing for conservative transfer)
     """
     from equations import _combine_scalings, _dadt, _dedt
     
@@ -155,27 +164,40 @@ def compute_derivs_hydro(t, y, M_c1, M_c2, hydro_params):
         M1 = M_c1
         M2 = M_c2
         evolve_mass = False
+    elif len(y) == 3:
+        # 3-variable mode [a, e, M1] - backwards compatibility
+        a = y[0]
+        e = min(max(y[1], 0.0), 1.0 - 1e-8)
+        M1 = max(y[2], 1e-10)
+        M2 = _HYDRO_CACHE['M2_initial']  # Constant
+        evolve_mass = 'donor_only'
     else:
-        # New 3-variable mode (a, e, M1)
+        # New 4-variable mode [a, e, M1, M2] - conservative transfer
         a = y[0]
         e = min(max(y[1], 0.0), 1.0 - 1e-8)
         M1 = max(y[2], 1e-10)  # Current donor mass
-        M2 = _HYDRO_CACHE['M2']  # Constant accretor mass
-        evolve_mass = True
+        M2 = max(y[3], 1e-10)  # Current accretor mass
+        evolve_mass = 'both'
     
     M_c = M1 + M2
     
     # Compute dynamic mass transfer rate
-    M_dot = compute_dynamic_M_dot(a, M1, M2)
+    M_dot = compute_dynamic_M_dot(a, M1, M2)  # Negative: mass leaving donor
     
-    # Mass scaling from current masses (instantaneous)
-    f1 = 1.0  # No scaling - using actual masses
-    df1 = M_dot / M1 if M1 > 1e-10 else 0.0
-    d2f1 = 0.0
+    # Get accretion efficiency
+    beta = _HYDRO_CACHE.get('beta', 1.0)
+    
+    # Mass scaling for M1 (donor - losing mass)
+    f1 = 1.0  # Using actual masses, no initial scaling
+    df1 = M_dot / M1 if M1 > 1e-10 else 0.0  # Negative
+    d2f1 = 0.0  # Assume constant rate for now
     d3f1 = 0.0
     
+    # Mass scaling for M2 (accretor - gaining mass)
     f2 = 1.0
-    df2 = 0.0
+    # M2 gains mass at rate beta * |M_dot| = -beta * M_dot (since M_dot < 0)
+    dM2_dt = -beta * M_dot  # Positive for M_dot < 0
+    df2 = dM2_dt / M2 if M2 > 1e-10 else 0.0  # Positive (mass increasing)
     d2f2 = 0.0
     d3f2 = 0.0
     
@@ -201,7 +223,10 @@ def compute_derivs_hydro(t, y, M_c1, M_c2, hydro_params):
         a, e,
     )
     
-    if evolve_mass:
+    if evolve_mass == 'both':
+        # Conservative mass transfer: dM2/dt = -beta * M_dot
+        return np.array([dadt_val, dedt_val, M_dot, dM2_dt], dtype=np.float64)
+    elif evolve_mass == 'donor_only':
         return np.array([dadt_val, dedt_val, M_dot], dtype=np.float64)
     else:
         return np.array([dadt_val, dedt_val], dtype=np.float64)

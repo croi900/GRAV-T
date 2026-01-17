@@ -1,0 +1,6 @@
+High priority modifications:
+    - ideal gas model (not isothermal) -> nozzle flow solver: see how can M' be solved for
+    - 
+
+Medium priority:
+    - see what exactly is mass loss here, to M2 or out of the system ?

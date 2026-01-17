@@ -52,6 +52,7 @@ class IntegrationRun:
                 T_ph=config.hydro.T_ph,
                 mu=config.hydro.mu,
                 use_full_bvp=config.hydro.use_full_bvp,
+                beta=getattr(config.hydro, 'beta', 1.0),  # Accretion efficiency
             )
         
         self.system = lambda t, y: system_map(decay_type)(
@@ -61,9 +62,9 @@ class IntegrationRun:
         self.t1 = t1
         self.writer = h5py.File(f"{self.config.name}/{self.config.name}.h5", "a")
         
-        # Use 3-variable state [a, e, M1] for hydrodynamics
+        # Use 4-variable state [a, e, M1, M2] for hydrodynamics (conservative mass transfer)
         if self.is_hydro:
-            y0 = [self.state.a, self.state.e, self.state.M1]
+            y0 = [self.state.a, self.state.e, self.state.M1, self.state.M2]
         else:
             y0 = [self.state.a, self.state.e]
         
@@ -188,10 +189,14 @@ class IntegrationRun:
                         a_buffer[buffer_ptr] = istate[0]
                         e_buffer[buffer_ptr] = istate[1]
                         
-                        # For hydrodynamics, use evolved M1 from state; M2 constant
-                        if self.is_hydro and len(istate) >= 3:
+                        # For hydrodynamics, use evolved M1 and M2 from state
+                        if self.is_hydro and len(istate) >= 4:
                             m1_buffer[buffer_ptr] = istate[2]
-                            m2_buffer[buffer_ptr] = self.state.M2  # Accretor constant
+                            m2_buffer[buffer_ptr] = istate[3]  # Evolved accretor mass
+                        elif self.is_hydro and len(istate) >= 3:
+                            # Backwards compat: 3-variable state
+                            m1_buffer[buffer_ptr] = istate[2]
+                            m2_buffer[buffer_ptr] = self.state.M2
                         else:
                             m1_buffer[buffer_ptr] = (
                                 self.state.M1 * self.decay_function.value(t_target)
