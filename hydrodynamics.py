@@ -25,15 +25,22 @@ _HYDRO_CACHE = {
     'P_gas_ph': 1e4,
     'Gamma_Edd': 0.5,
     'M2': 0.0,  # Accretor mass (constant)
+    'T_ph': 10000.0,  # Photosphere temperature (K)
+    'mu': 0.6,  # Mean molecular weight
+    'use_full_bvp': False,  # Use full BVP solver
 }
 
 
-def set_hydro_params(R_donor, rho_ph, P_gas_ph, L_rad, M_donor, kappa_R, Gamma_Edd_fixed=0.0, M2=0.0):
+def set_hydro_params(R_donor, rho_ph, P_gas_ph, L_rad, M_donor, kappa_R, 
+                     Gamma_Edd_fixed=0.0, M2=0.0, T_ph=10000.0, mu=0.6, use_full_bvp=False):
     """Set global hydro parameters before ODE integration."""
     _HYDRO_CACHE['R_donor'] = R_donor
     _HYDRO_CACHE['rho_ph'] = rho_ph
     _HYDRO_CACHE['P_gas_ph'] = P_gas_ph
     _HYDRO_CACHE['M2'] = M2
+    _HYDRO_CACHE['T_ph'] = T_ph
+    _HYDRO_CACHE['mu'] = mu
+    _HYDRO_CACHE['use_full_bvp'] = use_full_bvp
     
     if Gamma_Edd_fixed > 0:
         _HYDRO_CACHE['Gamma_Edd'] = Gamma_Edd_fixed
@@ -109,6 +116,20 @@ def compute_dynamic_M_dot(a: float, M1: float, M2: float) -> float:
     if B <= 0 or C <= 0 or not np.isfinite(B) or not np.isfinite(C):
         return 0.0
     
+    # Use full BVP solver if enabled
+    if _HYDRO_CACHE.get('use_full_bvp', False):
+        try:
+            from nozzle_flow import compute_M_dot_cached
+            T_ph = _HYDRO_CACHE.get('T_ph', 10000.0)
+            mu = _HYDRO_CACHE.get('mu', 0.6)
+            return compute_M_dot_cached(
+                a, M1, M2, R_donor, rho_ph, T_ph, Gamma_Edd, mu
+            )
+        except Exception as e:
+            # Fallback to simplified formula
+            print(f"BVP solver failed, using simplified formula: {e}")
+    
+    # Simplified formula (Eqs 32/36)
     if R_donor >= R_L:
         return _compute_M_dot_rlof(rho_ph, P_gas_ph, Gamma_Edd, B, C)
     else:

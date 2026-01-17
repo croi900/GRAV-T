@@ -113,3 +113,24 @@ def eddington_factor(L_rad: float, M: float, kappa_R: float) -> float:
     c_light = 2.998e8
     L_Edd = 4.0 * np.pi * c_light * G * M / kappa_R
     return L_rad / L_Edd
+
+
+@njit(cache=True)
+def compute_roche_grid(q, x_min, x_max, y_min, y_max, nx, ny):
+    """
+    Compute Roche potential on a 2D grid (z=0).
+    Returns 2D array of potential values.
+    """
+    z_grid = np.zeros((ny, nx))
+    
+    dx = (x_max - x_min) / max(nx - 1, 1)
+    dy = (y_max - y_min) / max(ny - 1, 1)
+    
+    for i in range(ny):
+        y = y_min + i * dy
+        for j in range(nx):
+            x = x_min + j * dx
+            # Potential in z=0 plane
+            z_grid[i, j] = roche_potential(x, y, 0.0, q)
+            
+    return z_grid

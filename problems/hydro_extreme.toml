@@ -1,7 +1,7 @@
 # Extreme hydrodynamic mass transfer - STRONG effects
 # Parameters chosen to show visible mass and orbital evolution differences
 
-M1 = 1.4              # Donor mass (solar masses)
+M1 = 1.6              # Donor mass (solar masses)
 M2 = 1.4              # Accretor mass (solar masses)
 a = 2e-4              # Orbital separation (AU) - ~15,000 km
 e = 0.0               # Circular orbit
@@ -11,7 +11,7 @@ e = 0.0               # Circular orbit
 decay_rate = 0.0
 decay_type = "hydrodynamics"
 
-output_points = 10000000
+output_points = 1000000
 use_cotime = true
 cotime_a_min = 3e3
 cotime_max_time = 1e20
@@ -35,8 +35,11 @@ observer_distance_mpc = 10
 [hydrodynamics]
 R_donor = 0.1         # 0.1 R_sun = ~70,000 km (>> R_L ~ 5700 km, strong overflow)
 T_eff = 100000        # Very hot donor
+T_ph = 50000          # Photosphere temperature (K) for isothermal EOS
 L_rad = 1e36          # Very high luminosity 
 rho_ph = 1e5          # EXTREME photosphere density (kg/m^3)
 P_gas_ph = 1e15       # EXTREME pressure (Pa)
 kappa_R = 0.034       # Electron scattering opacity
 Gamma_Edd = 0.1       # Will be overridden by variable_hydro.py
+mu = 0.6              # Mean molecular weight (fully ionized H/He)
+use_full_bvp = false  # Set to true to use full flow equations (Eqs 20)

@@ -49,6 +49,9 @@ class IntegrationRun:
                 kappa_R=config.hydro.kappa_R,
                 Gamma_Edd_fixed=config.hydro.Gamma_Edd,
                 M2=self.state.M2,
+                T_ph=config.hydro.T_ph,
+                mu=config.hydro.mu,
+                use_full_bvp=config.hydro.use_full_bvp,
             )
         
         self.system = lambda t, y: system_map(decay_type)(
