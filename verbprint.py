@@ -1,7 +1,6 @@
 import time
 
 VERBOSE = 0
-
 DELTA_TIME = 0
 
 
@@ -10,5 +9,5 @@ def vprint(*args, **kwargs):
         global DELTA_TIME
         old = DELTA_TIME
         DELTA_TIME = time.time()
-        print(f"[{(DELTA_TIME - old):.6f}] ", end="")
+        print(f"[{DELTA_TIME - old:.6f}] ", end="")
         print(*args, **kwargs)

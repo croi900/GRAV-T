@@ -1,5 +1,4 @@
 from functools import partial
-
 from numbergen import ExponentialDecay
 from scipy.integrate import *
 from domain_gen import *

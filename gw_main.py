@@ -71,39 +71,3 @@ if __name__ == "__main__":
     )
     merger_cfg = copy.deepcopy(config)
     merger_cfg.state = circularization.run()
-    if config.initial_points_exponent > 0:
-        t_eval = domain_gen.exponential_domain(
-            0,
-            cotime,
-            2,
-            config.exponent_offset,
-            config.initial_points_exponent
-        )
-    else:
-        merger_window = merger_cfg.merger_seconds * 2.0
-        t_eval = domain_gen.uniform_domain(
-            0,
-            merger_window,
-            int(config.output_points)
-        )
-        print(
-            f"Merger sampling: {config.output_points} points over {merger_window}s (2x margin)"
-        )
-        print(
-            f"  → Resolution: {merger_window / config.output_points * 1000000.0:.2f} μs per point"
-        )
-    merger = IntegrationRun(
-        "merger",
-        merger_cfg,
-        0,
-        merger_cfg.merger_seconds * 2.0,
-        t_eval=t_eval,
-        decay_type=config.decay_type,
-        solver=config.method,
-    )
-    # merger.run()
-    # plotter = PolarizationPlotter(config, skip_compute=False)
-    # plotter.plot("merger")
-
-    plotter = OrbitPlotter(config)
-    plotter.plot("circularization")

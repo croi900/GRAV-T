@@ -1,36 +1,4 @@
-"""
-EXAMPLE TOML CONFIG
-
-decay_rate = 1e-20
-M1 = 1.4
-M2 = 1.4
-a = 1
-e = 0.8
-
-[integration]
-output_points = 10000000
-use_cotime = true
-cotime_a_min = 1e1
-cotime_max_time = 1e30
-method = "Radau"
-decay_type = "exponential"
-initial_points_exponent = 0
-exponent_offset = 12
-merger_focus = true
-merger_seconds = 5.0
-
-[rendering]
-width = 1920
-height = 1080
-fps = 60
-tail_length = 200
-star_scale = 5.0
-memory_gb = 10.0
-stride = 1000
-"""
-
 import copy
-
 from name_maps import *
 import tomli
 from dataclasses import dataclass, field
@@ -57,10 +25,6 @@ class State:
 
     @classmethod
     def from_si(cls, M1_kg, M2_kg, a_m, e, decay):
-        """
-        Construct a State when the inputs are already in SI units.
-        Avoids the solar-mass / AU scaling done in __init__.
-        """
         obj = cls.__new__(cls)
         obj.M1 = M1_kg
         obj.M2 = M2_kg
@@ -71,12 +35,18 @@ class State:
 
     def __deepcopy__(self, memo):
         new_instance = self.__class__(
-            copy.deepcopy(self.M1, memo),
-            copy.deepcopy(self.M2, memo),
-            copy.deepcopy(self.a, memo),
-            copy.deepcopy(self.e, memo),
-            copy.deepcopy(self.decay_rate, memo),
-            copy.deepcopy(self.decay_type, memo),
+            copy.deepcopy(self.M1,
+                          memo),
+            copy.deepcopy(self.M2,
+                          memo),
+            copy.deepcopy(self.a,
+                          memo),
+            copy.deepcopy(self.e,
+                          memo),
+            copy.deepcopy(self.decay_rate,
+                          memo),
+            copy.deepcopy(self.decay_type,
+                          memo),
         )
         memo[id(self)] = new_instance
         return new_instance
@@ -106,7 +76,6 @@ class Config:
 
     def __init__(self, toml_file):
         file = tomli.load(open(toml_file, "rb"))
-
         self.state = State(
             file["M1"],
             file["M2"],
@@ -133,16 +102,13 @@ class Config:
         self.tail_length = file["tail_length"]
         self.star_scale = file["star_scale"]
         self.memory_gb = file["memory_gb"]
-
         MPC = 3.086e22
         self.observer_distance = file.get("observer_distance_mpc", 10) * MPC
 
     def __deepcopy__(self, memo):
         new_config = object.__new__(Config)
         memo[id(self)] = new_config
-
         new_config.state = copy.deepcopy(self.state, memo)
-
         new_config.name = self.name
         new_config.output_points = self.output_points
         new_config.use_cotime = self.use_cotime
@@ -162,5 +128,4 @@ class Config:
         new_config.star_scale = self.star_scale
         new_config.memory_gb = self.memory_gb
         new_config.observer_distance = self.observer_distance
-
         return new_config

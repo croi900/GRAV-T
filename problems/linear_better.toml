@@ -13,7 +13,7 @@ output_points = 10000000
 use_cotime = true
 cotime_a_min = 3e4          # ISCO radius ~30 km for NS merger
 cotime_max_time = 1e20      # ~300 years max integration
-observer_distance_mpc = 10  # 10 Megaparsecs (typical LIGO distance)
+observer_distance_mpc = 1  # 10 Megaparsecs (typical LIGO distance)
 
 method = "Radau"
 decay_type = "linear"
